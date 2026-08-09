@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+backend/venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Build & Bundles
+frontend/dist/
+*.tar.gz
+
+# Database & Environment
+*.db
+*.sqlite3
+.env
+.DS_Store
