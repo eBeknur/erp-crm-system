@@ -58,20 +58,9 @@ Zamonaviy supermarket va savdo majmualari uchun mo'ljallangan ko'p do'konli (Mul
 - **HTTP Client**: Axios (Interceptors & Auto Auth)
 
 ### Deployment (Server Sozlamalari)
-- **Server**: Ubuntu Linux VPS (`169.58.147.145`)
+- **Server**: Ubuntu Linux VPS (Production Server)
 - **Web Server / Proxy**: Nginx (Reverse Proxy + Static SPA Host, Cache-Control Header Optimization)
-- **SSL / HTTPS**: OpenSSL (Self-signed 10-year SSL for Camera/GPS permissions)
-
----
-
-## 🔑 Boshlang'ich Login va Parollar (Default Credentials)
-
-| Rol | Username | Parol | F.I.SH |
-| :--- | :--- | :--- | :--- |
-| **Bosh Admin** | `admin` | `Admin1234@` | Toshkent Admini |
-| **Ishchi (Beknur)** | `Beknur` | `Beknur1234@` | Beknur Bozorov |
-| **HR Menejer** | `hr_manager` | `Hr1234@` | Malika HR Menejer |
-| **Chief Developer** | `developer` | `Dev1234@` | Beknur Developer |
+- **SSL / HTTPS**: OpenSSL (Self-signed SSL for Camera/GPS permissions)
 
 ---
 
@@ -116,7 +105,7 @@ backend/venv/bin/python run_vps.py
 ```
 Ushbu skript:
 1. Frontend dist bundle-ni yig'adi.
-2. SFTP orqali serverga (`169.58.147.145`) arxivlaydi va yuklaydi.
+2. SFTP orqali maqsli serverga arxivlaydi va yuklaydi.
 3. Systemd va Nginx sozlamalarini yangilab qayta ishga tushiradi.
 
 ---
