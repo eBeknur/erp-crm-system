@@ -39,8 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'employees', label: "Ishchilar Ro'yxati", icon: Users, allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'] },
     { id: 'attendance', label: "Nazorat", icon: Clock, badge: 'Shift 09:00', allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER', 'ISHCHI', 'SELLER'] },
     { id: 'credits', label: "Kreditlar Bo'limi", icon: Landmark, badge: 'Kredit', allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'finance', label: 'Moliya & Xarajatlar', icon: DollarSign, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'reports', label: 'Hisobotlar (Analytics)', icon: BarChart3, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
+    { id: 'finance', label: 'Moliya & Xarajatlar', icon: DollarSign, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] }
   ];
 
   // Filter menu items per role
