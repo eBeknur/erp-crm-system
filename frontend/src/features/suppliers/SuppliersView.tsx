@@ -77,19 +77,23 @@ export const SuppliersView: React.FC = () => {
     }
   };
 
+  const [payError, setPayError] = useState<string | null>(null);
+
   const handlePayDebt = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSupplier || !payAmount) return;
 
+    setPayError(null);
     setSubmitting(true);
     try {
       await paySupplierDebt(selectedSupplier.id, Number(payAmount), accountType, "Postavshik qarz to'lovi");
       setShowPayModal(false);
       setSelectedSupplier(null);
       setPayAmount('');
+      setPayError(null);
       fetchSuppliers();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "To'lovda xatolik yuz berdi");
+      setPayError(err.response?.data?.detail || "To'lovni amalga oshirishda xatolik yuz berdi");
     } finally {
       setSubmitting(false);
     }
@@ -405,6 +409,13 @@ export const SuppliersView: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {payError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs rounded-2xl flex items-center justify-between">
+                <span>⚠️ {payError}</span>
+                <button type="button" onClick={() => setPayError(null)} className="text-rose-500 hover:text-rose-800 font-black">✕</button>
+              </div>
+            )}
 
             <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs space-y-1">
               <span className="text-amber-800 font-bold block uppercase">Hozirgi Qarz Balansi:</span>

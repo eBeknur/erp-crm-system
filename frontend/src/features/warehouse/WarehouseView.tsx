@@ -15,7 +15,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const isSuperAdmin = !currentUser || currentUser.role === 'SUPER_ADMIN';
+  const canEditProduct = !currentUser || currentUser.role === 'ADMIN' || currentUser.role === 'DEVELOPER' || currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'MANAGER' || currentUser.role === 'HR_MANAGER';
 
   // Add Form State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -191,7 +191,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
             <span className="text-base font-black text-emerald-600">{formatMoney(totalInventoryValuation)}</span>
           </div>
 
-          {isSuperAdmin && (
+          {canEditProduct && (
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full shadow-md shadow-blue-600/20 transition"
@@ -263,7 +263,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
                   <th className="py-4 px-5 text-right">Tannarx</th>
                   <th className="py-4 px-5 text-right">Sotuv Narxi</th>
                   <th className="py-4 px-5 text-right">Ombor Qiymati</th>
-                  {isSuperAdmin && <th className="py-4 px-5 text-center">Amallar</th>}
+                  {canEditProduct && <th className="py-4 px-5 text-center">Amallar</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -289,7 +289,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
                       <td className="py-4 px-5 text-right text-slate-400">{formatMoney(p.cost_price)}</td>
                       <td className="py-4 px-5 text-right font-extrabold text-blue-600">{formatMoney(p.selling_price)}</td>
                       <td className="py-4 px-5 text-right font-bold text-slate-900">{formatMoney(p.current_stock * p.cost_price)}</td>
-                      {isSuperAdmin && (
+                      {canEditProduct && (
                         <td className="py-4 px-5 text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             <button

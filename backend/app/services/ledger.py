@@ -148,9 +148,9 @@ class AuditService:
         log_entry = AuditLog(
             user_id=user_id,
             user_name=user_name or "Tizim",
-            action=action,
+            action_type=action,
             entity=entity,
             entity_id=entity_id,
-            details=details
+            changed_data=details
         )
         db.add(log_entry)
