@@ -28,7 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     // Developer Specific Tabs
     { id: 'developer_profile', label: 'Developer Profil', icon: User, badge: 'DEV', allowedRoles: ['DEVELOPER'] },
     { id: 'stores', label: 'Magazinlar (Stores)', icon: Layers, badge: 'Multi-Tenant', allowedRoles: ['DEVELOPER'] },
-    { id: 'audit', label: 'Audit Loglar & Texnik', icon: ShieldCheck, badge: 'Audit', allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN'] },
+    { id: 'audit', label: 'Audit Loglar & Texnik', icon: ShieldCheck, badge: 'Audit', allowedRoles: ['DEVELOPER'] },
     { id: 'api_docs', label: 'API Hujjatlar', icon: Code, badge: 'API', allowedRoles: ['DEVELOPER'] },
 
     // Store Admin & Operations Tabs

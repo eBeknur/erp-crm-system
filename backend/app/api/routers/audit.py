@@ -22,14 +22,14 @@ def list_audit_logs(
     - ADMIN: Sees ONLY logs of their own store.
     - DEVELOPER: Sees logs across ALL stores, option to filter by store_id.
     """
-    # Restrict ISHCHI & HR_MANAGER
+    # Restrict to DEVELOPER only
     role_map = {"SUPER_ADMIN": "ADMIN", "MANAGER": "HR_MANAGER", "SELLER": "ISHCHI"}
     user_role = role_map.get(current_user.role, current_user.role)
 
-    if user_role in ["ISHCHI", "HR_MANAGER"]:
+    if user_role != "DEVELOPER":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Loglarni ko'rish uchun ruxsat berilmadi!"
+            detail="Loglarni ko'rish faqat Dasturchi (DEVELOPER) uchun ruxsat etilgan!"
         )
 
     # Server-side store isolation check
