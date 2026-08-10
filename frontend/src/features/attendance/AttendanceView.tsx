@@ -420,92 +420,94 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
         </div>
       )}
 
-      {/* ADMIN DASHBOARD: Display Worker Check-In Times, Worked Hours & 7-Day Filter */}
-      <div className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-indigo-600" />
-            <span>📋 Ishchilar Kelish va Ish Soatlari (Kunbay)</span>
-          </h3>
+      {/* ADMIN DASHBOARD: Display Worker Check-In Times, Worked Hours & 7-Day Filter (Shown ONLY to Admin/HR/Dev) */}
+      {isAdmin && (
+        <div className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-indigo-600" />
+              <span>📋 Ishchilar Kelish va Ish Soatlari (Kunbay)</span>
+            </h3>
 
-          {/* 7-DAY SELECTOR TABS */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-            {last7Days.map((day) => (
-              <button
-                key={day.offset}
-                onClick={() => setSelectedDayOffset(day.offset)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 ${
-                  selectedDayOffset === day.offset
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 font-black'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{day.label}</span>
-              </button>
-            ))}
+            {/* 7-DAY SELECTOR TABS */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+              {last7Days.map((day) => (
+                <button
+                  key={day.offset}
+                  onClick={() => setSelectedDayOffset(day.offset)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 ${
+                    selectedDayOffset === day.offset
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 font-black'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{day.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {filteredListByDay.length === 0 ? (
-          <div className="text-center py-12 space-y-2">
-            <Clock className="w-12 h-12 text-slate-300 mx-auto" />
-            <p className="text-xs text-slate-500 font-bold">Ushbu kunda ({last7Days[selectedDayOffset].label}) hali hech qaysi ishchi kelishni tasdiqlamadi.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {filteredListByDay.map((item) => {
-              const photoUrl = item.photo_url || item.check_in_photo_url;
-              const displayName = item.full_name || item.employee?.full_name || `Ishchi #${item.user_id || item.employee_id}`;
-              const workedStr = item.worked_time_str || (item.worked_hours ? `${item.worked_hours} soat` : '0 soat');
+          {filteredListByDay.length === 0 ? (
+            <div className="text-center py-12 space-y-2">
+              <Clock className="w-12 h-12 text-slate-300 mx-auto" />
+              <p className="text-xs text-slate-500 font-bold">Ushbu kunda ({last7Days[selectedDayOffset].label}) hali hech qaysi ishchi kelishni tasdiqlamadi.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {filteredListByDay.map((item) => {
+                const photoUrl = item.photo_url || item.check_in_photo_url;
+                const displayName = item.full_name || item.employee?.full_name || `Ishchi #${item.user_id || item.employee_id}`;
+                const workedStr = item.worked_time_str || (item.worked_hours ? `${item.worked_hours} soat` : '0 soat');
 
-              return (
-                <div key={item.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 flex flex-col justify-between hover:shadow-md transition">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-sm text-slate-900">{displayName}</span>
-                      {renderLateBadge(item)}
-                    </div>
+                return (
+                  <div key={item.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 flex flex-col justify-between hover:shadow-md transition">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-sm text-slate-900">{displayName}</span>
+                        {renderLateBadge(item)}
+                      </div>
 
-                    <div className="text-[11px] font-mono text-slate-600 space-y-1 pt-1">
-                      <div>Kelgan vaqti: <strong className="text-slate-900 font-bold">{new Date(item.check_in_time).toLocaleTimeString('uz-UZ')}</strong></div>
-                      <div>Ketgan vaqti: <strong className="text-slate-900 font-bold">{item.check_out_time ? new Date(item.check_out_time).toLocaleTimeString('uz-UZ') : 'Ishlamoqda'}</strong></div>
-                      
-                      {/* Worked Hours Calculation Badge */}
-                      <div className="pt-1">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black shadow-sm ${
-                          item.check_out_time
-                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                            : 'bg-blue-100 text-blue-900 border border-blue-300 animate-pulse'
-                        }`}>
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Ishlagan vaqti: {workedStr}</span>
-                        </span>
+                      <div className="text-[11px] font-mono text-slate-600 space-y-1 pt-1">
+                        <div>Kelgan vaqti: <strong className="text-slate-900 font-bold">{new Date(item.check_in_time).toLocaleTimeString('uz-UZ')}</strong></div>
+                        <div>Ketgan vaqti: <strong className="text-slate-900 font-bold">{item.check_out_time ? new Date(item.check_out_time).toLocaleTimeString('uz-UZ') : 'Ishlamoqda'}</strong></div>
+                        
+                        {/* Worked Hours Calculation Badge */}
+                        <div className="pt-1">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black shadow-sm ${
+                            item.check_out_time
+                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                              : 'bg-blue-100 text-blue-900 border border-blue-300 animate-pulse'
+                          }`}>
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>Ishlagan vaqti: {workedStr}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {photoUrl ? (
-                    <div className="pt-2">
-                      <span className="text-[10px] text-slate-400 uppercase font-extrabold block mb-1">Foto-Isbot:</span>
-                      <a href={photoUrl} target="_blank" rel="noopener noreferrer" className="block relative group overflow-hidden rounded-xl border border-slate-300">
-                        <img src={photoUrl} alt="Worker Proof" className="w-full h-40 object-cover group-hover:scale-105 transition" />
-                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold">
-                          🔍 Kattalashtirish
-                        </div>
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="bg-slate-200/50 p-4 rounded-xl text-center text-slate-400 text-xs italic">
-                      Foto-isbot yo'q
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                    {photoUrl ? (
+                      <div className="pt-2">
+                        <span className="text-[10px] text-slate-400 uppercase font-extrabold block mb-1">Foto-Isbot:</span>
+                        <a href={photoUrl} target="_blank" rel="noopener noreferrer" className="block relative group overflow-hidden rounded-xl border border-slate-300">
+                          <img src={photoUrl} alt="Worker Proof" className="w-full h-40 object-cover group-hover:scale-105 transition" />
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold">
+                            🔍 Kattalashtirish
+                          </div>
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-200/50 p-4 rounded-xl text-center text-slate-400 text-xs italic">
+                        Foto-isbot yo'q
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
