@@ -136,7 +136,7 @@ class UserOut(BaseModel):
 # --- Product Schemas ---
 class ProductCreate(BaseModel):
     name: str
-    sku: str
+    sku: Optional[str] = None
     barcode: Optional[str] = None
     category_name: str = "Umumiy"
     unit: str = "dona"

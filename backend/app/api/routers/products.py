@@ -28,9 +28,13 @@ def create_product(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    import time
+    if not req.sku or not req.sku.strip():
+        req.sku = f"PRD-{int(time.time() * 1000)}"
+
     existing = db.query(Product).filter(Product.sku == req.sku).first()
     if existing:
-        raise HTTPException(status_code=400, detail=f"SKU [{req.sku}] allaqachon mavjud!")
+        req.sku = f"PRD-{int(time.time() * 1000)}"
 
     product = Product(
         name=req.name,

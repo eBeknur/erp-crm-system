@@ -67,14 +67,15 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !sku) {
-      alert("Nomi va SKU kiritilishi shart!");
+    if (!name) {
+      alert("Mahsulot nomini kiritishingiz shart!");
       return;
     }
+    const finalSku = sku.trim() || `PRD-${Date.now().toString().slice(-6)}`;
     try {
       await createProduct({
         name,
-        sku,
+        sku: finalSku,
         barcode: barcode || undefined,
         category_name: categoryName,
         unit,
@@ -377,19 +378,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
                 />
               </div>
 
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">SKU (Artikul) *</label>
-                <input
-                  type="text"
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                  placeholder="SKU-1001"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-mono"
-                  required
-                />
-              </div>
-
-              <div>
+              <div className="col-span-2 sm:col-span-1">
                 <label className="text-slate-500 font-bold block mb-1">Shtrix-kod (Barcode)</label>
                 <input
                   type="text"
@@ -512,18 +501,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
                 <p className="text-[10px] text-blue-700">Administrator sifatida mahsulot qoldiq sonini to'g'ridan-to'g'ri o'zgartirishingiz mumkin.</p>
               </div>
 
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">SKU (Artikul)</label>
-                <input
-                  type="text"
-                  value={editSku}
-                  onChange={(e) => setEditSku(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-mono"
-                  required
-                />
-              </div>
-
-              <div>
+              <div className="col-span-2 sm:col-span-1">
                 <label className="text-slate-500 font-bold block mb-1">Shtrix-kod (Barcode)</label>
                 <input
                   type="text"
