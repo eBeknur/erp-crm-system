@@ -217,9 +217,8 @@ def seed_db():
 
         # 8. Accounts
         accounts_def = [
-            ("Naqd", "CASH"),
-            ("Bank", "BANK"),
-            ("Click/Payme", "CLICK")
+            ("Naqd Kassa", "CASH"),
+            ("Bank / Plastik / Click", "BANK")
         ]
         for name, acc_type in accounts_def:
             if not db.query(Account).filter(Account.name == name, Account.store_id == store1.id).first():

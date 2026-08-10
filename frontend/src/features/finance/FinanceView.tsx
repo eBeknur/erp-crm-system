@@ -264,8 +264,8 @@ export const FinanceView: React.FC = () => {
         </div>
       </div>
 
-      {/* 3 Account Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+      {/* 2 Account Balance Cards (Naqd Kassa & Bank/Plastik/Click) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {accounts.map((acc) => {
           const Icon = getAccountIcon(acc.account_type);
           return (
@@ -494,8 +494,7 @@ export const FinanceView: React.FC = () => {
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
                 >
                   <option value="CASH">💵 Naqd Kassa</option>
-                  <option value="BANK">💳 Bank Plastik Karta</option>
-                  <option value="CLICK">📱 Click / Payme</option>
+                  <option value="BANK">💳 Bank / Plastik / Click</option>
                 </select>
               </div>
               <div>
@@ -508,19 +507,6 @@ export const FinanceView: React.FC = () => {
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold text-base"
                   required
                 />
-              </div>
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">Kirim Maqsadi / Kategoriya *</label>
-                <select
-                  value={incomeCategory}
-                  onChange={(e) => setIncomeCategory(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
-                >
-                  <option value="KASSAGA_PUL_KIRIMI">Kassaga pul kirimi</option>
-                  <option value="SARMOYA">Boshlang'ich Sarmoya</option>
-                  <option value="QARZ_QAYTIShI">Qarz qaytishi</option>
-                  <option value="BOSHQA_TUSHUM">Boshqa tushum</option>
-                </select>
               </div>
               <div>
                 <label className="text-slate-500 font-bold block mb-1">Izoh (ixtiyoriy)</label>
@@ -592,8 +578,7 @@ export const FinanceView: React.FC = () => {
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
                 >
                   <option value="CASH">💵 Naqd Kassa</option>
-                  <option value="BANK">💳 Bank Plastik Karta</option>
-                  <option value="CLICK">📱 Click / Payme</option>
+                  <option value="BANK">💳 Bank / Plastik / Click</option>
                 </select>
               </div>
             </div>

@@ -62,6 +62,29 @@ def get_accounts(
     current_user: User = Depends(get_current_user)
 ):
     target_store_id = verify_store_isolation(current_user, store_id)
+
+    # Merge legacy CLICK account into BANK account
+    click_acc = db.query(Account).filter(Account.account_type == "CLICK").first()
+    bank_acc = db.query(Account).filter(Account.account_type == "BANK").first()
+    if click_acc:
+        if bank_acc:
+            bank_acc.balance += click_acc.balance
+            bank_acc.name = "Bank / Plastik / Click"
+            db.delete(click_acc)
+        else:
+            click_acc.account_type = "BANK"
+            click_acc.name = "Bank / Plastik / Click"
+        db.commit()
+
+    cash_acc = db.query(Account).filter(Account.account_type == "CASH").first()
+    if cash_acc and cash_acc.name != "Naqd Kassa":
+        cash_acc.name = "Naqd Kassa"
+        db.commit()
+
+    if bank_acc and bank_acc.name != "Bank / Plastik / Click":
+        bank_acc.name = "Bank / Plastik / Click"
+        db.commit()
+
     query = db.query(Account)
     if target_store_id is not None:
         query = query.filter(Account.store_id == target_store_id)
@@ -69,9 +92,8 @@ def get_accounts(
 
     if not accounts:
         defaults = [
-            ("Naqd", "CASH"),
-            ("Bank", "BANK"),
-            ("Click/Payme", "CLICK")
+            ("Naqd Kassa", "CASH"),
+            ("Bank / Plastik / Click", "BANK")
         ]
         for name, acc_type in defaults:
             acc = Account(store_id=target_store_id or current_user.store_id, name=name, account_type=acc_type, balance=0.0)
