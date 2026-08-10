@@ -41,9 +41,13 @@ export const FinanceView: React.FC = () => {
     }
   };
 
+  const [formError, setFormError] = useState<string | null>(null);
+
   const handleCreateExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) return;
+
+    setFormError(null);
     try {
       await createExpense({
         category_name: categoryName,
@@ -55,9 +59,10 @@ export const FinanceView: React.FC = () => {
       setShowAddExpense(false);
       setAmount('');
       setNotes('');
+      setFormError(null);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik");
+      setFormError(err.response?.data?.detail || "Xarajat saqlashda xatolik yuz berdi");
     }
   };
 
@@ -314,6 +319,14 @@ export const FinanceView: React.FC = () => {
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <form onSubmit={handleCreateExpense} className="bg-white border border-slate-100 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
             <h3 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3">Operatsion Xarajat Kiritish</h3>
+            
+            {formError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs rounded-2xl flex items-center justify-between">
+                <span>⚠️ {formError}</span>
+                <button type="button" onClick={() => setFormError(null)} className="text-rose-500 hover:text-rose-800 font-black">✕</button>
+              </div>
+            )}
+
             <div className="space-y-3 text-xs">
               <div>
                 <label className="text-slate-500 font-bold block mb-1">Xarajat Kategoriyasi *</label>

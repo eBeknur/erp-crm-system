@@ -31,7 +31,7 @@ def create_expense(
     role_map = {"SUPER_ADMIN": "ADMIN", "MANAGER": "HR_MANAGER"}
     user_role = role_map.get(current_user.role, current_user.role)
 
-    if user_role not in ["ADMIN", "DEVELOPER"]:
+    if user_role not in ["ADMIN", "DEVELOPER", "HR_MANAGER"]:
         raise HTTPException(status_code=403, detail="Xarajat qo'shish ruxsat etilmagan!")
 
     if req.amount <= 0:
@@ -52,6 +52,20 @@ def create_expense(
     db.commit()
     db.refresh(expense)
 
+    # Deduct from financial ledger (accounts & financial transactions)
+    from app.services.ledger import FinancialLedgerEngine
+    FinancialLedgerEngine.update_account_balance(
+        db=db,
+        account_type=req.account_type,
+        amount=req.amount,
+        transaction_type="EXPENSE",
+        category=req.category_name,
+        description=f"Operatsion xarajat: {req.category_name} ({req.notes or ''})",
+        reference_type="EXPENSE",
+        reference_id=expense.id,
+        user_id=current_user.id
+    )
+
     log_audit(
         db=db,
         action_type="ADMIN_ADDED_EXPENSE",
@@ -64,6 +78,8 @@ def create_expense(
         notes=f"{user_role} '{current_user.username}' xarajat qo'shdi: {expense.category_name} ({expense.amount} so'm)"
     )
 
+    db.commit()
+    db.refresh(expense)
     return expense
 
 @router.delete("/expenses/{expense_id}")
@@ -78,6 +94,21 @@ def delete_expense(
         raise HTTPException(status_code=404, detail="Xarajat topilmadi")
 
     verify_store_isolation(current_user, exp.store_id)
+
+    # Restore account balance
+    from app.services.ledger import FinancialLedgerEngine
+    FinancialLedgerEngine.update_account_balance(
+        db=db,
+        account_type=exp.account_type,
+        amount=exp.amount,
+        transaction_type="INCOME",
+        category=exp.category_name,
+        description=f"O'chirilgan xarajat balansi qaytarildi: {exp.category_name}",
+        reference_type="EXPENSE_DELETE",
+        reference_id=exp.id,
+        user_id=current_user.id
+    )
+
     db.delete(exp)
     db.commit()
     return {"message": "Xarajat o'chirildi"}
