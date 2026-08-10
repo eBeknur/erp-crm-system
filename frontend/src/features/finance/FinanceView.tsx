@@ -281,16 +281,6 @@ export const FinanceView: React.FC = () => {
                     <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">🟢 Yagona Balans (Barcha Kirim & Xarajatlar)</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setIncomeAccountType(acc.account_type);
-                    setShowAddIncome(true);
-                  }}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-full shadow-lg shadow-emerald-500/30 transition flex items-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>+ Pul Qo'shish</span>
-                </button>
               </div>
               <div className="flex items-baseline justify-between gap-2 pt-2">
                 <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-white">{formatMoney(acc.balance)}</h3>
