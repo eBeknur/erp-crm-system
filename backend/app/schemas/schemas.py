@@ -343,6 +343,8 @@ class AttendanceOut(BaseModel):
     distance_meters: Optional[float] = None
     is_valid_location: Optional[bool] = True
     late_minutes: Optional[int] = 0
+    worked_hours: Optional[float] = 0.0
+    worked_time_str: Optional[str] = None
     status: str
     notes: Optional[str] = None
     created_at: datetime

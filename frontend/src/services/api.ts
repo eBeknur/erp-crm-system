@@ -317,7 +317,7 @@ export const checkOutAttendance = async (latitude: number, longitude: number, ph
   return res.data;
 };
 
-export const getAttendanceList = async (employee_id?: number) => {
-  const res = await api.get('/attendance/list', { params: { employee_id } });
+export const getAttendanceList = async (employee_id?: number, days: number = 7) => {
+  const res = await api.get('/attendance/list', { params: { employee_id, days } });
   return res.data;
 };

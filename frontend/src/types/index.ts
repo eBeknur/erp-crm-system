@@ -307,6 +307,8 @@ export interface AttendanceItem {
   distance_meters?: number;
   is_valid_location?: boolean;
   late_minutes?: number;
+  worked_hours?: number;
+  worked_time_str?: string;
   status: 'PRESENT' | 'LATE' | 'ABSENT' | 'COMPLETED';
   notes?: string;
   created_at: string;

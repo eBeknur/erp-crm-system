@@ -248,6 +248,7 @@ def check_out(
 def list_attendance(
     employee_id: Optional[int] = None,
     store_id: Optional[int] = None,
+    days: Optional[int] = 7,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -274,9 +275,33 @@ def list_attendance(
     if employee_id:
         query = query.filter(Attendance.employee_id == employee_id)
 
-    records = query.order_by(Attendance.id.desc()).limit(20).all()
+    if days and days > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        query = query.filter(Attendance.created_at >= cutoff)
+
+    records = query.order_by(Attendance.id.desc()).limit(150).all()
     for r in records:
         setattr(r, 'photo_url', r.check_in_photo_url)
         if r.employee:
             setattr(r, 'full_name', r.employee.full_name)
+
+        # Compute worked hours and string
+        if r.check_in_time and r.check_out_time:
+            diff_sec = (r.check_out_time - r.check_in_time).total_seconds()
+            hrs = int(diff_sec // 3600)
+            mins = int((diff_sec % 3600) // 60)
+            setattr(r, 'worked_hours', round(diff_sec / 3600.0, 2))
+            setattr(r, 'worked_time_str', f"{hrs} soat {mins} min")
+        elif r.check_in_time:
+            now_utc = datetime.now(timezone.utc)
+            check_in_aware = r.check_in_time if r.check_in_time.tzinfo else r.check_in_time.replace(tzinfo=timezone.utc)
+            diff_sec = max(0, (now_utc - check_in_aware).total_seconds())
+            hrs = int(diff_sec // 3600)
+            mins = int((diff_sec % 3600) // 60)
+            setattr(r, 'worked_hours', round(diff_sec / 3600.0, 2))
+            setattr(r, 'worked_time_str', f"{hrs} soat {mins} min (Ishlamoqda)")
+        else:
+            setattr(r, 'worked_hours', 0.0)
+            setattr(r, 'worked_time_str', "0 soat")
+
     return records

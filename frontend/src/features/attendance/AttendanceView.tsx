@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, CheckCircle2, AlertTriangle, ShieldCheck, Clock, MapPin, Check, X, RefreshCw } from 'lucide-react';
+import { Camera, CheckCircle2, AlertTriangle, ShieldCheck, Clock, FileSpreadsheet, RefreshCw, Calendar } from 'lucide-react';
 import { getTodayAttendance, getAttendanceList, checkInAttendance, checkOutAttendance } from '../../services/api';
 import { AttendanceItem, User } from '../../types';
 
@@ -11,7 +11,7 @@ interface AttendanceViewProps {
 const TURKUAZ_LAT = 41.311081;
 const TURKUAZ_LNG = 69.240562;
 
-// Utility function:Compresses raw Base64 images to 500px max width & 60% JPEG quality (30KB size instead of 3MB!)
+// Utility function: Compresses raw Base64 images to 500px max width & 60% JPEG quality (30KB size instead of 3MB!)
 const compressImage = (base64Str: string, maxWidth = 500, quality = 0.6): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -42,6 +42,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
   const [loading, setLoading] = useState(true);
   const [submittingAttendance, setSubmittingAttendance] = useState(false);
 
+  // Selected Day Filter (0 = Bugun, 1 = Kecha, 2..6 = 2..6 kun oldin)
+  const [selectedDayOffset, setSelectedDayOffset] = useState<number>(0);
+
   // Photo & Inline Messaging
   const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
   const [inlineMessage, setInlineMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
@@ -64,7 +67,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
       if (isAdmin) {
         const [today, list] = await Promise.all([
           getTodayAttendance(),
-          getAttendanceList()
+          getAttendanceList(undefined, 7)
         ]);
         setTodayAttendance(today);
         setAttendanceList(list);
@@ -160,6 +163,64 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
     }
   };
 
+  // Export Attendance & Worked Hours Report to Excel (.csv with UTF-8 BOM)
+  const exportToExcel = () => {
+    if (attendanceList.length === 0) {
+      alert("Yuklab olish uchun ma'lumotlar mavjud emas!");
+      return;
+    }
+
+    const headers = ["F.I.SH (Ishchi)", "Sana", "Kelgan Vaqti", "Ketgan Vaqti", "Ishlagan Vaqti", "Kechikish (Daqiqa)", "Holati"];
+    const rows = attendanceList.map(item => {
+      const name = item.full_name || item.employee?.full_name || `Ishchi #${item.employee_id}`;
+      const dateStr = new Date(item.check_in_time).toLocaleDateString('uz-UZ');
+      const inTime = new Date(item.check_in_time).toLocaleTimeString('uz-UZ');
+      const outTime = item.check_out_time ? new Date(item.check_out_time).toLocaleTimeString('uz-UZ') : 'Ketmagan';
+      const workedStr = item.worked_time_str || (item.worked_hours ? `${item.worked_hours} soat` : '0 soat');
+      const lateMins = item.late_minutes || 0;
+      const statusText = item.status === 'COMPLETED' ? 'Yakunlangan' : item.status === 'PRESENT' ? 'Ishda' : 'Kech qolgan';
+
+      return [
+        `"${name}"`,
+        `"${dateStr}"`,
+        `"${inTime}"`,
+        `"${outTime}"`,
+        `"${workedStr}"`,
+        `"${lateMins} min"`,
+        `"${statusText}"`
+      ].join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    const fileName = `Ishchilar_Ish_Soatlari_Hisoboti_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Helper to generate 7 days array
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    return {
+      offset: i,
+      label: i === 0 ? "Bugun" : i === 1 ? "Kecha" : `${d.getDate()}-${d.toLocaleString('uz-UZ', { month: 'short' })}`,
+      fullDateStr: d.toISOString().slice(0, 10)
+    };
+  });
+
+  // Filter list by selected day
+  const filteredListByDay = attendanceList.filter(item => {
+    const itemDateStr = new Date(item.check_in_time).toISOString().slice(0, 10);
+    const targetDateStr = last7Days[selectedDayOffset].fullDateStr;
+    return itemDateStr === targetDateStr;
+  });
+
   const renderLateBadge = (item: AttendanceItem) => {
     const checkInDate = new Date(item.check_in_time);
     const checkInMins = checkInDate.getHours() * 60 + checkInDate.getMinutes();
@@ -198,19 +259,31 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-full text-indigo-300 text-xs font-bold">
             <Clock className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Shift 09:00 AM — Keldi-Ketdi Tizimi</span>
+            <span>Shift 09:00 AM — Keldi-Ketdi & Ish Soati Nazorati</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-            {isAdmin ? "📋 Ishchilar Kelish Nazorati va Foto-Logi" : "📸 Ishga Kelishni Tasdiqlash"}
+            {isAdmin ? "📋 Ishchilar Kelish va Ish Soatlari Nazorati" : "📸 Ishga Kelishni Tasdiqlash"}
           </h2>
           <p className="text-xs text-slate-300 max-w-xl font-medium leading-relaxed">
-            Ishchilar soat 09:00 da smenani rasmga tushib tasdiqlaydi. 10 daqiqagacha kechikish yashil, 10 daqiqadan ko'p kechikish qizil rangda adminga ko'rinadi.
+            Ishchilar kelganda va ketganda vaqtini tasdiqlaydi. Barcha ish soatlari avtomatik hisoblab boriladi.
           </p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-right shrink-0">
-          <span className="text-[10px] text-indigo-200 uppercase font-black tracking-wider block">Jami Kelgan Ishchilar</span>
-          <span className="text-2xl font-black text-emerald-400 font-mono">{totalPresentCount} ta</span>
+        <div className="flex items-center gap-4 shrink-0">
+          {isAdmin && (
+            <button
+              onClick={exportToExcel}
+              className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-emerald-600/30 transition flex items-center gap-2 cursor-pointer active:scale-95 border border-emerald-400/40"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>📊 Excel Hisobotini Yuklash (.xlsx)</span>
+            </button>
+          )}
+
+          <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-right">
+            <span className="text-[10px] text-indigo-200 uppercase font-black tracking-wider block">Jami Kelganlar</span>
+            <span className="text-2xl font-black text-emerald-400 font-mono">{totalPresentCount} ta</span>
+          </div>
         </div>
       </div>
 
@@ -245,6 +318,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
                 <p className="text-xs text-emerald-800 font-bold mt-2 font-mono">
                   Kelgan vaqtingiz: {new Date(todayAttendance.check_in_time).toLocaleTimeString('uz-UZ')}
                 </p>
+                {todayAttendance.worked_time_str && (
+                  <p className="text-xs text-blue-800 font-black font-mono bg-blue-100/80 px-4 py-1.5 rounded-full inline-block mt-2">
+                    ⏱ Ishlagan vaqtingiz: {todayAttendance.worked_time_str}
+                  </p>
+                )}
               </div>
 
               {(todayAttendance.photo_url || todayAttendance.check_in_photo_url) && (
@@ -342,42 +420,68 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
         </div>
       )}
 
-      {/* ADMIN DASHBOARD: Display Worker Check-In Times, Late Badges & Photos */}
+      {/* ADMIN DASHBOARD: Display Worker Check-In Times, Worked Hours & 7-Day Filter */}
       <div className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-indigo-600" />
-            <span>📋 Ishchilar</span>
+            <span>📋 Ishchilar Kelish va Ish Soatlari (Kunbay)</span>
           </h3>
 
-          <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
-            Bugun kelganlar: <strong className="text-emerald-600 font-black">{totalPresentCount} ta ishchi</strong>
-          </span>
+          {/* 7-DAY SELECTOR TABS */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+            {last7Days.map((day) => (
+              <button
+                key={day.offset}
+                onClick={() => setSelectedDayOffset(day.offset)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 ${
+                  selectedDayOffset === day.offset
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 font-black'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{day.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {attendanceList.length === 0 ? (
+        {filteredListByDay.length === 0 ? (
           <div className="text-center py-12 space-y-2">
             <Clock className="w-12 h-12 text-slate-300 mx-auto" />
-            <p className="text-xs text-slate-500 font-bold">Bugun hali hech qaysi ishchi kelishni tasdiqlamadi.</p>
+            <p className="text-xs text-slate-500 font-bold">Ushbu kunda ({last7Days[selectedDayOffset].label}) hali hech qaysi ishchi kelishni tasdiqlamadi.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {attendanceList.map((item) => {
+            {filteredListByDay.map((item) => {
               const photoUrl = item.photo_url || item.check_in_photo_url;
               const displayName = item.full_name || item.employee?.full_name || `Ishchi #${item.user_id || item.employee_id}`;
+              const workedStr = item.worked_time_str || (item.worked_hours ? `${item.worked_hours} soat` : '0 soat');
+
               return (
-                <div key={item.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 flex flex-col justify-between">
+                <div key={item.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 flex flex-col justify-between hover:shadow-md transition">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-black text-sm text-slate-900">{displayName}</span>
                       {renderLateBadge(item)}
                     </div>
 
-                    <div className="text-[11px] font-mono text-slate-500 space-y-0.5">
-                      <div>Kelgan vaqti: <strong className="text-slate-800 font-bold">{new Date(item.check_in_time).toLocaleTimeString('uz-UZ')}</strong></div>
-                      {item.check_out_time && (
-                        <div>Ketgan vaqti: <strong className="text-slate-800 font-bold">{new Date(item.check_out_time).toLocaleTimeString('uz-UZ')}</strong></div>
-                      )}
+                    <div className="text-[11px] font-mono text-slate-600 space-y-1 pt-1">
+                      <div>Kelgan vaqti: <strong className="text-slate-900 font-bold">{new Date(item.check_in_time).toLocaleTimeString('uz-UZ')}</strong></div>
+                      <div>Ketgan vaqti: <strong className="text-slate-900 font-bold">{item.check_out_time ? new Date(item.check_out_time).toLocaleTimeString('uz-UZ') : 'Ishlamoqda'}</strong></div>
+                      
+                      {/* Worked Hours Calculation Badge */}
+                      <div className="pt-1">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black shadow-sm ${
+                          item.check_out_time
+                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            : 'bg-blue-100 text-blue-900 border border-blue-300 animate-pulse'
+                        }`}>
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Ishlagan vaqti: {workedStr}</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
 
