@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Wallet, CreditCard, Smartphone, Plus, ArrowUpRight, Tag, Download, Printer, PieChart, Trash2 } from 'lucide-react';
-import { getAccounts, getFinancialTransactions, getExpenses, createExpense, deleteExpense } from '../../services/api';
+import { getAccounts, getFinancialTransactions, getExpenses, createExpense, deleteExpense, addIncomeDeposit } from '../../services/api';
 import { Account, FinancialTransaction, Expense } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 
@@ -16,6 +16,36 @@ export const FinanceView: React.FC = () => {
   const [amount, setAmount] = useState<number | ''>('');
   const [accountType, setAccountType] = useState('CASH');
   const [notes, setNotes] = useState('');
+
+  // Add Income (Deposit) Form
+  const [showAddIncome, setShowAddIncome] = useState(false);
+  const [incomeAmount, setIncomeAmount] = useState<number | ''>('');
+  const [incomeAccountType, setIncomeAccountType] = useState('CASH');
+  const [incomeCategory, setIncomeCategory] = useState('KASSAGA_PUL_KIRIMI');
+  const [incomeNotes, setIncomeNotes] = useState('');
+  const [incomeFormError, setIncomeFormError] = useState<string | null>(null);
+
+  const handleCreateIncome = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!incomeAmount) return;
+
+    setIncomeFormError(null);
+    try {
+      await addIncomeDeposit({
+        account_type: incomeAccountType,
+        amount: Number(incomeAmount),
+        category: incomeCategory,
+        notes: incomeNotes
+      });
+      setShowAddIncome(false);
+      setIncomeAmount('');
+      setIncomeNotes('');
+      setIncomeFormError(null);
+      fetchData();
+    } catch (err: any) {
+      setIncomeFormError(err.response?.data?.detail || "Pul kirim qilishda xatolik yuz berdi");
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -138,6 +168,17 @@ export const FinanceView: React.FC = () => {
           </div>
 
           <button
+            onClick={() => {
+              setIncomeAccountType('CASH');
+              setShowAddIncome(true);
+            }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-full shadow-md shadow-emerald-600/20 transition"
+          >
+            <ArrowUpRight className="w-4 h-4" />
+            <span>+ Pul Kirim Qilish</span>
+          </button>
+
+          <button
             onClick={() => setShowAddExpense(true)}
             className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-full shadow-md shadow-rose-600/20 transition"
           >
@@ -159,7 +200,19 @@ export const FinanceView: React.FC = () => {
                   <Icon className="w-5 h-5" />
                 </div>
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900">{formatMoney(acc.balance)}</h3>
+              <div className="flex items-baseline justify-between gap-2">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900">{formatMoney(acc.balance)}</h3>
+                <button
+                  onClick={() => {
+                    setIncomeAccountType(acc.account_type);
+                    setShowAddIncome(true);
+                  }}
+                  className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[11px] rounded-full border border-emerald-200 transition flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Pul Qo'shish</span>
+                </button>
+              </div>
               <p className="text-[10px] text-slate-400">Oxirgi yangilanish: {new Date(acc.updated_at).toLocaleTimeString('uz-UZ')}</p>
             </div>
           );
@@ -317,6 +370,78 @@ export const FinanceView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Income (Deposit) Modal */}
+      {showAddIncome && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleCreateIncome} className="bg-white border border-slate-100 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <h3 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <ArrowUpRight className="w-5 h-5 text-emerald-600" />
+              <span>Hisobga Pul Kirim Qilish</span>
+            </h3>
+
+            {incomeFormError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs rounded-2xl flex items-center justify-between">
+                <span>⚠️ {incomeFormError}</span>
+                <button type="button" onClick={() => setIncomeFormError(null)} className="text-rose-500 hover:text-rose-800 font-black">✕</button>
+              </div>
+            )}
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-slate-500 font-bold block mb-1">Qaysi Hisobga Pul Qo'shilsin? *</label>
+                <select
+                  value={incomeAccountType}
+                  onChange={(e) => setIncomeAccountType(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
+                >
+                  <option value="CASH">💵 Naqd Kassa</option>
+                  <option value="BANK">💳 Bank Plastik Karta</option>
+                  <option value="CLICK">📱 Click / Payme</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-slate-500 font-bold block mb-1">Kirim Summasi (so'm) *</label>
+                <input
+                  type="number"
+                  value={incomeAmount}
+                  onChange={(e) => setIncomeAmount(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="5000000"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold text-base"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-slate-500 font-bold block mb-1">Kirim Maqsadi / Kategoriya *</label>
+                <select
+                  value={incomeCategory}
+                  onChange={(e) => setIncomeCategory(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
+                >
+                  <option value="KASSAGA_PUL_KIRIMI">Kassaga pul kirimi</option>
+                  <option value="SARMOYA">Boshlang'ich Sarmoya</option>
+                  <option value="QARZ_QAYTIShI">Qarz qaytishi</option>
+                  <option value="BOSHQA_TUSHUM">Boshqa tushum</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-slate-500 font-bold block mb-1">Izoh (ixtiyoriy)</label>
+                <input
+                  type="text"
+                  value={incomeNotes}
+                  onChange={(e) => setIncomeNotes(e.target.value)}
+                  placeholder="Kassa to'ldirish yoki tushum haqida izoh..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2 border-t border-slate-100">
+              <button type="button" onClick={() => setShowAddIncome(false)} className="flex-1 py-2.5 bg-slate-100 text-slate-800 font-bold text-xs rounded-full">Bekor qilish</button>
+              <button type="submit" className="flex-1 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-full shadow-md shadow-emerald-600/20">Pul Kirim Qilish</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Add Expense Modal */}
       {showAddExpense && (

@@ -3,10 +3,57 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_user, verify_store_isolation
 from app.models.models import Account, FinancialTransaction, Expense, User
+from pydantic import BaseModel
 from app.schemas.schemas import ExpenseCreate, ExpenseOut, AccountOut, FinancialTransactionOut
 from app.services.audit_service import log_audit
 
 router = APIRouter(prefix="/finance", tags=["Finance & Expenses"])
+
+class IncomeCreate(BaseModel):
+    account_type: str = "CASH"
+    amount: float
+    category: str = "KASSAGA_PUL_KIRIMI"
+    notes: Optional[str] = None
+
+@router.post("/deposit")
+def add_income_deposit(
+    req: IncomeCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="Summa noldan katta bo'lishi kerak")
+
+    target_store_id = current_user.store_id
+
+    from app.services.ledger import FinancialLedgerEngine
+    FinancialLedgerEngine.update_account_balance(
+        db=db,
+        account_type=req.account_type,
+        amount=req.amount,
+        transaction_type="INCOME",
+        category=req.category,
+        description=f"Hisobga pul kirim qilindi ({req.notes or 'Kirim/Qo\'shimcha sarmoya'})",
+        reference_type="DEPOSIT",
+        reference_id=None,
+        user_id=current_user.id
+    )
+
+    log_audit(
+        db=db,
+        action_type="ADMIN_ADDED_INCOME",
+        user=current_user,
+        store_id=target_store_id,
+        entity="Account",
+        entity_id=None,
+        new_value=f"Account: {req.account_type}, Amount: {req.amount}",
+        request=request,
+        notes=f"'{current_user.username}' {req.account_type} hisobiga {req.amount:,.0f} so'm pul kirim qildi"
+    )
+
+    db.commit()
+    return {"message": f"{req.amount:,.0f} so'm muvaffaqiyatli kirim qilindi!"}
 
 @router.get("/accounts", response_model=List[AccountOut])
 def get_accounts(

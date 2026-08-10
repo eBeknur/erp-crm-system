@@ -216,6 +216,11 @@ export const deleteExpense = async (id: number) => {
   return res.data;
 };
 
+export const addIncomeDeposit = async (data: { account_type: string; amount: number; category?: string; notes?: string }) => {
+  const res = await api.post('/finance/deposit', data);
+  return res.data;
+};
+
 export const getPnLReport = async (range: string = 'month'): Promise<PnLStatement> => {
   const res = await api.get('/reports/pnl', { params: { range } });
   return res.data;
