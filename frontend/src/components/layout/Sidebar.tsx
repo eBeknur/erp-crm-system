@@ -2,7 +2,7 @@ import React from 'react';
 import {
   History, Package, ArrowDownToLine,
   Building2, UserCheck, DollarSign, BarChart3, ShieldCheck, Rocket, Layers, Landmark, CheckSquare, X, ShoppingBag,
-  User, Code, Users, Clock
+  User, Code, Users, Clock, LogOut
 } from 'lucide-react';
 import { User as UserType } from '../../types';
 
@@ -23,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const userRole = currentUser?.role || 'ADMIN';
   const isDeveloper = userRole === 'DEVELOPER';
+  const isWorker = userRole === 'ISHCHI' || userRole === 'SELLER';
 
   const menuItems: { id: string; label: string; icon: any; badge?: string; allowedRoles: string[] }[] = [
     // Developer Specific Tabs
@@ -167,6 +168,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           );
         })}
+        {isWorker && (
+          <button
+            onClick={() => {
+              if (window.confirm("Tizimdan chiqmoqchimisiz?")) {
+                localStorage.clear();
+                window.location.reload();
+              }
+            }}
+            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl text-rose-500 hover:text-rose-700 transition-all"
+          >
+            <div className="p-1 rounded-xl bg-rose-50 text-rose-600">
+              <LogOut className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold tracking-tight">Chiqish</span>
+          </button>
+        )}
       </div>
     </>
   );

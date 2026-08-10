@@ -37,20 +37,23 @@ export const Header: React.FC<HeaderProps> = ({
 
   const availableTasks = tasks.filter(t => t.status === 'AVAILABLE');
 
+  const isWorker = currentUser?.role === 'ISHCHI' || currentUser?.role === 'SELLER';
   const displayName = currentUser?.full_name || currentUser?.username || 'Foydalanuvchi';
   const displayEmail = currentUser?.email || `${currentUser?.username || 'user'}@supermarket.uz`;
 
   return (
-    <header className="h-16 bg-white/90 backdrop-blur border-b border-slate-200/80 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs font-sans">
+    <header className={`${isWorker ? 'hidden md:flex' : 'flex'} h-16 bg-white/90 backdrop-blur border-b border-slate-200/80 px-4 sm:px-8 items-center justify-between sticky top-0 z-30 shadow-xs font-sans`}>
       {/* Left: Mobile Toggle & Role Badge */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={onToggleMobileMenu}
-          className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200 transition"
-          aria-label="Menu"
-        >
-          <Menu className="w-5 h-5 text-slate-800" />
-        </button>
+        {!isWorker && (
+          <button
+            onClick={onToggleMobileMenu}
+            className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200 transition"
+            aria-label="Menu"
+          >
+            <Menu className="w-5 h-5 text-slate-800" />
+          </button>
+        )}
 
         <div className="flex items-center gap-2">
           {isDeveloper ? (
