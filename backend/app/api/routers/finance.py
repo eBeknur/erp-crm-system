@@ -3,10 +3,52 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_user, verify_store_isolation
 from app.models.models import Account, FinancialTransaction, Expense, User
-from app.schemas.schemas import ExpenseCreate, ExpenseOut
+from app.schemas.schemas import ExpenseCreate, ExpenseOut, AccountOut, FinancialTransactionOut
 from app.services.audit_service import log_audit
 
 router = APIRouter(prefix="/finance", tags=["Finance & Expenses"])
+
+@router.get("/accounts", response_model=List[AccountOut])
+def get_accounts(
+    store_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    target_store_id = verify_store_isolation(current_user, store_id)
+    query = db.query(Account)
+    if target_store_id is not None:
+        query = query.filter(Account.store_id == target_store_id)
+    accounts = query.all()
+
+    if not accounts:
+        defaults = [
+            ("Naqd", "CASH"),
+            ("Bank", "BANK"),
+            ("Click/Payme", "CLICK")
+        ]
+        for name, acc_type in defaults:
+            acc = Account(store_id=target_store_id or current_user.store_id, name=name, account_type=acc_type, balance=0.0)
+            db.add(acc)
+        db.commit()
+        query = db.query(Account)
+        if target_store_id is not None:
+            query = query.filter(Account.store_id == target_store_id)
+        accounts = query.all()
+
+    return accounts
+
+@router.get("/transactions", response_model=List[FinancialTransactionOut])
+def get_financial_transactions(
+    store_id: Optional[int] = None,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    target_store_id = verify_store_isolation(current_user, store_id)
+    query = db.query(FinancialTransaction)
+    if target_store_id is not None:
+        query = query.filter(FinancialTransaction.store_id == target_store_id)
+    return query.order_by(FinancialTransaction.id.desc()).limit(limit).all()
 
 @router.get("/expenses", response_model=List[ExpenseOut])
 def get_expenses(

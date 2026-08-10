@@ -30,12 +30,16 @@ export const FinanceView: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const [accs, txs, exps] = await Promise.all([getAccounts(), getFinancialTransactions(), getExpenses()]);
-      setAccounts(accs);
-      setTransactions(txs);
-      setExpenses(exps);
+      const [accsRes, txsRes, expsRes] = await Promise.allSettled([
+        getAccounts(),
+        getFinancialTransactions(),
+        getExpenses()
+      ]);
+      if (accsRes.status === 'fulfilled') setAccounts(accsRes.value);
+      if (txsRes.status === 'fulfilled') setTransactions(txsRes.value);
+      if (expsRes.status === 'fulfilled') setExpenses(expsRes.value);
     } catch (err) {
-      console.error(err);
+      console.error("Finance fetchData error:", err);
     } finally {
       setLoading(false);
     }
