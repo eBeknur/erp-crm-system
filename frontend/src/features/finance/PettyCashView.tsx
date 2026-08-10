@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Receipt, Plus, Trash2, Calendar, Coffee, Car, FileText, Wrench, Package, Utensils, Zap } from 'lucide-react';
 import { getExpenses, createExpense, deleteExpense } from '../../services/api';
 import { Expense } from '../../types';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const PettyCashView: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -68,8 +69,16 @@ export const PettyCashView: React.FC = () => {
     }
   };
 
-  const handleDeletePettyExpense = async (id: number) => {
-    if (!window.confirm("Ushbu kichik chiqimni o'chirmoqchimisiz? Kassadan summa qaytariladi.")) return;
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const askDeletePettyExpense = (id: number) => {
+    setDeleteId(id);
+  };
+
+  const handleConfirmDeletePettyExpense = async () => {
+    if (!deleteId) return;
+    const id = deleteId;
+    setDeleteId(null);
     try {
       await deleteExpense(id);
       fetchExpenses();
@@ -214,7 +223,7 @@ export const PettyCashView: React.FC = () => {
                     <span className="text-[10px] font-mono text-slate-400 block font-bold">{exp.account_type}</span>
                   </div>
                   <button
-                    onClick={() => handleDeletePettyExpense(exp.id)}
+                    onClick={() => askDeletePettyExpense(exp.id)}
                     className="p-2 text-rose-500 hover:bg-rose-100/60 rounded-xl transition"
                     title="Chiqimni o'chirish"
                   >
@@ -226,6 +235,18 @@ export const PettyCashView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* CUSTOM CONFIRM MODAL FOR PETTY EXPENSE */}
+      <ConfirmModal
+        isOpen={deleteId !== null}
+        title="Kichik Chiqimni O'chirish"
+        message="Ushbu kichik chiqimni o'chirmoqchimisiz? Kassadan summa qaytariladi."
+        confirmText="Ha, o'chirish"
+        cancelText="Yo'q, bekor qilish"
+        type="danger"
+        onConfirm={handleConfirmDeletePettyExpense}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 };

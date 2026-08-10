@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, Search, AlertTriangle, Edit2, Trash2 } from 'lucide-react';
 import { getProducts, createProduct, updateProduct, deleteProduct, getStockMovements } from '../../services/api';
 import { Product, StockMovement, User } from '../../types';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface WarehouseViewProps {
   currentUser?: User | null;
@@ -127,10 +128,18 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
     }
   };
 
-  const handleDeleteProduct = async (id: number, prodName: string) => {
-    if (!window.confirm(`Rostdan ham '${prodName}' mahsulotini ombordan o'chirmoqchimisiz?`)) return;
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; prodId?: number; prodName?: string }>({ isOpen: false });
+
+  const askDeleteProduct = (id: number, prodName: string) => {
+    setDeleteConfirm({ isOpen: true, prodId: id, prodName });
+  };
+
+  const handleConfirmDeleteProduct = async () => {
+    if (!deleteConfirm.prodId) return;
+    const { prodId } = deleteConfirm;
+    setDeleteConfirm({ isOpen: false });
     try {
-      await deleteProduct(id);
+      await deleteProduct(prodId);
       fetchData();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Xatolik yuz berdi");
@@ -291,7 +300,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDeleteProduct(p.id, p.name)}
+                              onClick={() => askDeleteProduct(p.id, p.name)}
                               className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-xl transition"
                               title="Tovarni o'chirish"
                             >
@@ -572,6 +581,15 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
           </form>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="O'chirishni tasdiqlang"
+        message={`Rostdan ham '${deleteConfirm.prodName}'ni o'chirmoqchimisiz?`}
+        onConfirm={handleConfirmDeleteProduct}
+        onCancel={() => setDeleteConfirm({ isOpen: false })}
+      />
     </div>
   );
 };

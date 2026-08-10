@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Landmark, Plus, DollarSign, Calendar, Edit, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getCredits, createCredit, updateCredit, payCreditInstallment, deleteCredit } from '../../services/api';
 import { Credit } from '../../types';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const CreditsView: React.FC = () => {
   const [credits, setCredits] = useState<Credit[]>([]);
@@ -107,14 +108,21 @@ export const CreditsView: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Rostdan ham ushbu kredit yozuvini o'chirmoqchimisiz?")) {
-      try {
-        await deleteCredit(id);
-        fetchCredits();
-      } catch (err) {
-        console.error(err);
-      }
+  const [deleteCreditId, setDeleteCreditId] = useState<number | null>(null);
+
+  const askDeleteCredit = (id: number) => {
+    setDeleteCreditId(id);
+  };
+
+  const handleConfirmDeleteCredit = async () => {
+    if (!deleteCreditId) return;
+    const id = deleteCreditId;
+    setDeleteCreditId(null);
+    try {
+      await deleteCredit(id);
+      fetchCredits();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -263,7 +271,7 @@ export const CreditsView: React.FC = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(c.id)}
+                          onClick={() => askDeleteCredit(c.id)}
                           className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -502,6 +510,18 @@ export const CreditsView: React.FC = () => {
           </form>
         </div>
       )}
+
+      {/* CUSTOM CONFIRM MODAL FOR DELETING CREDIT */}
+      <ConfirmModal
+        isOpen={deleteCreditId !== null}
+        title="Kredit Yozuvini O'chirish"
+        message="Rostdan ham ushbu kredit yozuvini o'chirmoqchimisiz?"
+        confirmText="Ha, o'chirish"
+        cancelText="Yo'q, bekor qilish"
+        type="danger"
+        onConfirm={handleConfirmDeleteCredit}
+        onCancel={() => setDeleteCreditId(null)}
+      />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Phone, DollarSign, Award, AlertCircle, Trash2, CheckCircle2, X, Lock, Shield, User, Briefcase } from 'lucide-react';
 import { getEmployees, createEmployee, addEmployeeAdjustment, deleteEmployee } from '../../services/api';
 import { Employee, User as UserType } from '../../types';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface EmployeesViewProps {
   currentUser?: UserType | null;
@@ -119,11 +120,19 @@ export const EmployeesView: React.FC<EmployeesViewProps> = ({ currentUser }) => 
     }
   };
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!window.confirm(`Haqiqatan ham '${name}' ishchisini o'chirmoqchimisiz?`)) return;
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; empId?: number; empName?: string }>({ isOpen: false });
+
+  const askDelete = (id: number, name: string) => {
+    setDeleteConfirm({ isOpen: true, empId: id, empName: name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.empId) return;
+    const { empId, empName } = deleteConfirm;
+    setDeleteConfirm({ isOpen: false });
     try {
-      await deleteEmployee(id);
-      setMessage({ type: 'success', text: `Ishchi '${name}' o'chirildi.` });
+      await deleteEmployee(empId);
+      setMessage({ type: 'success', text: `Ishchi '${empName}' o'chirildi.` });
       fetchEmployeesData();
     } catch (err) {
       setMessage({ type: 'error', text: "Ishchini o'chirishda xatolik" });
@@ -263,7 +272,7 @@ export const EmployeesView: React.FC<EmployeesViewProps> = ({ currentUser }) => 
                     </button>
 
                     <button
-                      onClick={() => handleDelete(emp.id, emp.full_name)}
+                      onClick={() => askDelete(emp.id, emp.full_name)}
                       className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition cursor-pointer"
                       title="O'chirish"
                     >
@@ -479,6 +488,18 @@ export const EmployeesView: React.FC<EmployeesViewProps> = ({ currentUser }) => 
           </div>
         </div>
       )}
+
+      {/* CUSTOM CONFIRM MODAL FOR DELETING WORKER */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="Ishchini O'chirish"
+        message={`Haqiqatan ham '${deleteConfirm.empName}' ishchisini o'chirmoqchimisiz? Ushbu amalni ortga qaytarib bo'lmaydi.`}
+        confirmText="Ha, o'chirish"
+        cancelText="Yo'q, bekor qilish"
+        type="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteConfirm({ isOpen: false })}
+      />
     </div>
   );
 };

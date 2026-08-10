@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckSquare, Plus, Clock, CheckCircle2, Camera, AlertCircle, Trash2, ShieldCheck, X, ZoomIn } from 'lucide-react';
 import { getTasks, createTask, claimTask, completeTask, approveTask, deleteTask } from '../../services/api';
 import { TaskItem, User } from '../../types';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface TasksViewProps {
   currentUser?: User | null;
@@ -123,10 +124,18 @@ export const TasksView: React.FC<TasksViewProps> = ({ currentUser }) => {
     }
   };
 
-  const handleDelete = async (taskId: number) => {
-    if (!window.confirm("Rostdan ham ushbu vazifani o'chirmoqchimisiz?")) return;
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
+
+  const askDeleteTask = (taskId: number) => {
+    setDeleteTaskId(taskId);
+  };
+
+  const handleConfirmDeleteTask = async () => {
+    if (!deleteTaskId) return;
+    const id = deleteTaskId;
+    setDeleteTaskId(null);
     try {
-      await deleteTask(taskId);
+      await deleteTask(id);
       fetchTasks();
     } catch (err: any) {
       alert(formatErrorMessage(err));
@@ -242,7 +251,7 @@ export const TasksView: React.FC<TasksViewProps> = ({ currentUser }) => {
                     <div className="w-full flex items-center justify-between">
                       <span className="text-[11px] font-bold text-slate-400">⚡️ Ishchilar uchun ochiq topshiriq</span>
                       <button
-                        onClick={() => handleDelete(t.id)}
+                        onClick={() => askDeleteTask(t.id)}
                         className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition flex items-center gap-1 text-xs font-bold"
                         title="Vazifani o'chirish"
                       >
@@ -536,6 +545,18 @@ export const TasksView: React.FC<TasksViewProps> = ({ currentUser }) => {
           </div>
         </div>
       )}
+
+      {/* CUSTOM CONFIRM MODAL FOR DELETING TASK */}
+      <ConfirmModal
+        isOpen={deleteTaskId !== null}
+        title="Vazifani O'chirish"
+        message="Rostdan ham ushbu vazifani o'chirmoqchimisiz? Qaytarib bo'lmaydi."
+        confirmText="Ha, o'chirish"
+        cancelText="Yo'q, bekor qilish"
+        type="danger"
+        onConfirm={handleConfirmDeleteTask}
+        onCancel={() => setDeleteTaskId(null)}
+      />
     </div>
   );
 };

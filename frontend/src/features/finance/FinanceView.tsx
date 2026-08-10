@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DollarSign, Wallet, CreditCard, Smartphone, Plus, ArrowUpRight, Tag, Download, Printer, PieChart, Trash2 } from 'lucide-react';
 import { getAccounts, getFinancialTransactions, getExpenses, createExpense, deleteExpense } from '../../services/api';
 import { Account, FinancialTransaction, Expense } from '../../types';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 export const FinanceView: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -60,8 +61,16 @@ export const FinanceView: React.FC = () => {
     }
   };
 
-  const handleDeleteExp = async (id: number) => {
-    if (!window.confirm("Ushbu xarajatni o'chirib balansni tiklamoqchimisiz?")) return;
+  const [deleteExpId, setDeleteExpId] = useState<number | null>(null);
+
+  const askDeleteExp = (id: number) => {
+    setDeleteExpId(id);
+  };
+
+  const handleConfirmDeleteExp = async () => {
+    if (!deleteExpId) return;
+    const id = deleteExpId;
+    setDeleteExpId(null);
     try {
       await deleteExpense(id);
       fetchData();
@@ -250,7 +259,7 @@ export const FinanceView: React.FC = () => {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <button
-                        onClick={() => handleDeleteExp(e.id)}
+                        onClick={() => askDeleteExp(e.id)}
                         className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -355,6 +364,18 @@ export const FinanceView: React.FC = () => {
           </form>
         </div>
       )}
+
+      {/* CUSTOM CONFIRM MODAL FOR DELETING EXPENSE */}
+      <ConfirmModal
+        isOpen={deleteExpId !== null}
+        title="Xarajatni O'chirish"
+        message="Ushbu xarajatni o'chirib balansni tiklamoqchimisiz?"
+        confirmText="Ha, o'chirish"
+        cancelText="Yo'q, bekor qilish"
+        type="danger"
+        onConfirm={handleConfirmDeleteExp}
+        onCancel={() => setDeleteExpId(null)}
+      />
     </div>
   );
 };
