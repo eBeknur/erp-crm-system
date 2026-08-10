@@ -292,176 +292,83 @@ export const FinanceView: React.FC = () => {
       </div>
 
       {/* Financial Expense Analytics & Breakdown Report */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
+      {/* SINGLE UNIFIED FULL-WIDTH TABLE CARD: BARCHA HARAKATLAR JURNALI */}
+      <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-              <PieChart className="w-5 h-5 text-indigo-600" />
-              <span>Xarajatlar Tahlili va Categoriyalar Hisoboti</span>
+              <ArrowUpRight className="w-5 h-5 text-emerald-600" />
+              <span>📋 Barcha Harakatlar Jurnali (Kirim & Chiqimlar)</span>
             </h3>
-            <p className="text-xs text-slate-400">Kategoriyalar va Kichik Chiqimlar taqsimoti</p>
+            <p className="text-xs text-slate-400 mt-1">Barcha pul tushumlari, xarajatlar va amallar tarixi ({transactions.length} ta operatsiya)</p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-full transition shadow-sm"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Excel Yuklab Olish (.csv)</span>
-            </button>
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-full transition"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Chop Etish</span>
-            </button>
-          </div>
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-full transition shadow-md shadow-emerald-600/20 active:scale-95 border border-emerald-400/30 shrink-0 cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-white" />
+            <span>📥 Excel Yuklab Olish (.csv)</span>
+          </button>
         </div>
 
-        {/* Expense Category Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-            <span className="text-slate-400 font-bold text-xs block">Jami Xarajatlar Summasi:</span>
-            <span className="font-black text-rose-600 text-base">{formatMoney(totalExpensesSum)}</span>
-          </div>
-          <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-100">
-            <span className="text-amber-800 font-bold text-xs block">Mayda / Kichik Chiqimlar:</span>
-            <span className="font-black text-amber-600 text-base">{formatMoney(minorExpensesSum)}</span>
-          </div>
-          <div className="p-4 bg-blue-50/60 rounded-2xl border border-blue-100">
-            <span className="text-blue-900 font-bold text-xs block">Asosiy Operatsion Xarajatlar:</span>
-            <span className="font-black text-blue-600 text-base">{formatMoney(totalExpensesSum - minorExpensesSum)}</span>
-          </div>
-          <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
-            <span className="text-emerald-900 font-bold text-xs block">Aktiv Kategoriyalar:</span>
-            <span className="font-black text-emerald-600 text-base">{Object.keys(categoryTotals).length} ta</span>
-          </div>
-        </div>
-
-        {/* Expense Category Breakdown Progress Bars */}
-        <div className="space-y-3 pt-2">
-          <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-tight">Kategoriyalar bo'yicha hisobot:</h4>
-          {Object.keys(categoryTotals).length === 0 ? (
-            <p className="text-xs text-slate-400 py-2">Hali xarajatlar kiritilmagan.</p>
-          ) : (
-            Object.entries(categoryTotals).map(([cat, val]) => {
-              const percent = totalExpensesSum > 0 ? Math.round((val / totalExpensesSum) * 100) : 0;
-              return (
-                <div key={cat} className="space-y-1 text-xs">
-                  <div className="flex justify-between font-bold text-slate-800">
-                    <span>{cat}</span>
-                    <span className="font-mono">{formatMoney(val)} ({percent}%)</span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${percent}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Expenses Table & Cash Flow Transactions Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Expenses List */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-base font-extrabold text-slate-900 flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-rose-600" />
-              <span>Barcha Xarajatlar Jurnali</span>
-            </span>
-            <span className="text-xs font-mono text-slate-400 font-bold">{expenses.length} ta</span>
-          </h3>
-          <div className="overflow-x-auto max-h-96">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-50 text-slate-400 font-bold border-b border-slate-100">
+        <div className="overflow-x-auto max-h-[500px]">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead className="bg-slate-50 text-slate-400 font-bold border-b border-slate-100 sticky top-0">
+              <tr>
+                <th className="py-3.5 px-4">Sana & Vaqt</th>
+                <th className="py-3.5 px-4">Operatsiya / Izoh</th>
+                <th className="py-3.5 px-4">Kategoriya</th>
+                <th className="py-3.5 px-4 text-right">Summa</th>
+                <th className="py-3.5 px-4">Hisob</th>
+                <th className="py-3.5 px-4 text-center">Amal</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-700">
+              {transactions.length === 0 ? (
                 <tr>
-                  <th className="py-3 px-4">Kategoriya</th>
-                  <th className="py-3 px-4">Sana</th>
-                  <th className="py-3 px-4 text-right">Summa</th>
-                  <th className="py-3 px-4">Hisob</th>
-                  <th className="py-3 px-4"></th>
+                  <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
+                    Hali pul harakatlari amalga oshirilmagan.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {expenses.map((e) => (
-                  <tr key={e.id}>
-                    <td className="py-3 px-4 font-bold text-slate-900">{e.category_name}</td>
-                    <td className="py-3 px-4 text-slate-400">{e.date}</td>
-                    <td className="py-3 px-4 text-right font-extrabold text-rose-600">-{formatMoney(e.amount)}</td>
-                    <td className="py-3 px-4">
-                      <span className="px-2.5 py-1 rounded-full bg-slate-100 text-[10px] text-slate-600 font-mono font-bold">
-                        {e.account_type}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => askDeleteExp(e.id)}
-                        className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Cash Flow Ledger */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-              <ArrowUpRight className="w-4 h-4 text-emerald-600" />
-              <span>Cash Flow (Pul Harakatlari Jurnali)</span>
-            </h3>
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs rounded-full border border-emerald-200 transition"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Excel Yuklash</span>
-            </button>
-          </div>
-          <div className="overflow-x-auto max-h-96">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-50 text-slate-400 font-bold border-b border-slate-100">
-                <tr>
-                  <th className="py-3 px-4">Sana & Vaqt</th>
-                  <th className="py-3 px-4">Operatsiya</th>
-                  <th className="py-3 px-4">Kategoriya</th>
-                  <th className="py-3 px-4 text-right">Summa</th>
-                  <th className="py-3 px-4">Hisob</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {transactions.map((tx) => (
-                  <tr key={tx.id}>
-                    <td className="py-3 px-4 text-slate-400 font-medium whitespace-nowrap">
+              ) : (
+                transactions.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-slate-50/80 transition">
+                    <td className="py-3.5 px-4 text-slate-400 font-medium whitespace-nowrap">
                       {new Date(tx.created_at).toLocaleString('uz-UZ')}
                     </td>
-                    <td className="py-3 px-4 font-medium">
-                      <span className={`inline-flex items-center gap-1 font-bold ${tx.transaction_type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {tx.transaction_type === 'INCOME' ? '+' : '-'} {tx.description || tx.category}
+                    <td className="py-3.5 px-4 font-bold text-slate-900">
+                      <span className={`inline-flex items-center gap-1.5 ${tx.transaction_type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {tx.transaction_type === 'INCOME' ? '🟢 +' : '🔴 -'} {tx.description || tx.category}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-400">{tx.category}</td>
-                    <td className={`py-3 px-4 text-right font-extrabold ${tx.transaction_type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <td className="py-3.5 px-4 text-slate-500 font-medium">
+                      <span className="px-2.5 py-1 rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700">
+                        {tx.category}
+                      </span>
+                    </td>
+                    <td className={`py-3.5 px-4 text-right font-black text-sm ${tx.transaction_type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {tx.transaction_type === 'INCOME' ? '+' : '-'}{formatMoney(tx.amount)}
                     </td>
-                    <td className="py-3 px-4 font-mono text-[10px] text-slate-400">Asosiy Kassa</td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-500 font-semibold">
+                      Asosiy Kassa Balansi
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      {tx.transaction_type === 'EXPENSE' && tx.reference_id && (
+                        <button
+                          onClick={() => askDeleteExp(tx.reference_id!)}
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                          title="Xarajatni o'chirish"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
