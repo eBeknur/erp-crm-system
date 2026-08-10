@@ -3,8 +3,10 @@ import { Landmark, Plus, DollarSign, Calendar, Edit, Trash2, CheckCircle2, Alert
 import { getCredits, createCredit, updateCredit, payCreditInstallment, deleteCredit } from '../../services/api';
 import { Credit } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { AlertModal } from '../../components/common/AlertModal';
 
 export const CreditsView: React.FC = () => {
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [credits, setCredits] = useState<Credit[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,7 @@ export const CreditsView: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !lenderName || !totalAmount || !monthlyPayment) {
-      alert("Barcha majburiy maydonlarni to'ldiring!");
+      setAlertMessage("Barcha majburiy maydonlarni to'ldiring!");
       return;
     }
 
@@ -65,7 +67,7 @@ export const CreditsView: React.FC = () => {
       resetForm();
       fetchCredits();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik yuz berdi");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -89,7 +91,7 @@ export const CreditsView: React.FC = () => {
       resetForm();
       fetchCredits();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik yuz berdi");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -104,7 +106,7 @@ export const CreditsView: React.FC = () => {
       setPayAmount('');
       fetchCredits();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik yuz berdi");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -521,6 +523,12 @@ export const CreditsView: React.FC = () => {
         type="danger"
         onConfirm={handleConfirmDeleteCredit}
         onCancel={() => setDeleteCreditId(null)}
+      />
+
+      <AlertModal
+        isOpen={alertMessage !== null}
+        message={alertMessage || ''}
+        onClose={() => setAlertMessage(null)}
       />
     </div>
   );

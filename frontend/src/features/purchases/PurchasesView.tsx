@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { ArrowDownToLine, Plus, Trash2 } from 'lucide-react';
 import { getPurchases, getSuppliers, getProducts, createPurchase } from '../../services/api';
 import { Purchase, Supplier, Product } from '../../types';
+import { AlertModal } from '../../components/common/AlertModal';
 
 export const PurchasesView: React.FC = () => {
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -50,7 +52,7 @@ export const PurchasesView: React.FC = () => {
 
   const handleAddItemToInvoice = () => {
     if (!selectedProductId || !itemQty || !itemCost) {
-      alert("Mahsulot, miqdor va tannarx kiritilishi shart!");
+      setAlertMessage("Mahsulot, miqdor va tannarx kiritilishi shart!");
       return;
     }
     setItems([
@@ -71,7 +73,7 @@ export const PurchasesView: React.FC = () => {
   const handleSavePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supplierId || !invoiceNumber || items.length === 0) {
-      alert("Postavshik, Invoice № va tovarlar kiritilishi shart!");
+      setAlertMessage("Postavshik, Invoice № va tovarlar kiritilishi shart!");
       return;
     }
 
@@ -88,7 +90,7 @@ export const PurchasesView: React.FC = () => {
       setItems([]);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik yuz berdi");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -327,6 +329,12 @@ export const PurchasesView: React.FC = () => {
           </form>
         </div>
       )}
+
+      <AlertModal
+        isOpen={alertMessage !== null}
+        message={alertMessage || ''}
+        onClose={() => setAlertMessage(null)}
+      />
     </div>
   );
 };

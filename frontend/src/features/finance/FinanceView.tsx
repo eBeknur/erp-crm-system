@@ -3,8 +3,10 @@ import { DollarSign, Wallet, CreditCard, Smartphone, Plus, ArrowUpRight, Tag, Do
 import { getAccounts, getFinancialTransactions, getExpenses, createExpense, deleteExpense, addIncomeDeposit } from '../../services/api';
 import { Account, FinancialTransaction, Expense } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { AlertModal } from '../../components/common/AlertModal';
 
 export const FinanceView: React.FC = () => {
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -114,7 +116,7 @@ export const FinanceView: React.FC = () => {
       await deleteExpense(id);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -151,7 +153,7 @@ export const FinanceView: React.FC = () => {
 
   const handleExportExcel = () => {
     if (transactions.length === 0 && expenses.length === 0) {
-      alert("Yuklab olish uchun kirim-chiqim tranzaksiyalari mavjud emas!");
+      setAlertMessage("Yuklab olish uchun kirim-chiqim tranzaksiyalari mavjud emas!");
       return;
     }
 
@@ -582,6 +584,12 @@ export const FinanceView: React.FC = () => {
         type="danger"
         onConfirm={handleConfirmDeleteExp}
         onCancel={() => setDeleteExpId(null)}
+      />
+
+      <AlertModal
+        isOpen={alertMessage !== null}
+        message={alertMessage || ''}
+        onClose={() => setAlertMessage(null)}
       />
     </div>
   );

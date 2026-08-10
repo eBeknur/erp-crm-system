@@ -3,12 +3,14 @@ import { Package, Plus, Search, AlertTriangle, Edit2, Trash2 } from 'lucide-reac
 import { getProducts, createProduct, updateProduct, deleteProduct, getStockMovements } from '../../services/api';
 import { Product, StockMovement, User } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { AlertModal } from '../../components/common/AlertModal';
 
 interface WarehouseViewProps {
   currentUser?: User | null;
 }
 
 export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => {
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'products' | 'movements'>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
@@ -68,7 +70,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name) {
-      alert("Mahsulot nomini kiritishingiz shart!");
+      setAlertMessage("Mahsulot nomini kiritishingiz shart!");
       return;
     }
     const finalSku = sku.trim() || `PRD-${Date.now().toString().slice(-6)}`;
@@ -88,7 +90,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
       resetForm();
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik yuz berdi");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -125,7 +127,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
       setEditingProduct(null);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik yuz berdi");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -143,7 +145,7 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
       await deleteProduct(prodId);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Xatolik yuz berdi");
+      setAlertMessage(err.response?.data?.detail || "Xatolik yuz berdi");
     }
   };
 
@@ -567,6 +569,12 @@ export const WarehouseView: React.FC<WarehouseViewProps> = ({ currentUser }) => 
         message={`Rostdan ham '${deleteConfirm.prodName}'ni o'chirmoqchimisiz?`}
         onConfirm={handleConfirmDeleteProduct}
         onCancel={() => setDeleteConfirm({ isOpen: false })}
+      />
+
+      <AlertModal
+        isOpen={alertMessage !== null}
+        message={alertMessage || ''}
+        onClose={() => setAlertMessage(null)}
       />
     </div>
   );

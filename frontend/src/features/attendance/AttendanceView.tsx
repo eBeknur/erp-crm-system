@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Camera, CheckCircle2, AlertTriangle, ShieldCheck, Clock, FileSpreadsheet, RefreshCw, Calendar } from 'lucide-react';
 import { getTodayAttendance, getAttendanceList, checkInAttendance, checkOutAttendance } from '../../services/api';
 import { AttendanceItem, User } from '../../types';
+import { AlertModal } from '../../components/common/AlertModal';
 
 interface AttendanceViewProps {
   currentUser?: User | null;
@@ -163,10 +164,12 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
     }
   };
 
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
   // Export Attendance & Worked Hours Report to Excel (.csv with UTF-8 BOM)
   const exportToExcel = () => {
     if (attendanceList.length === 0) {
-      alert("Yuklab olish uchun ma'lumotlar mavjud emas!");
+      setAlertMessage("Yuklab olish uchun ma'lumotlar mavjud emas!");
       return;
     }
 
@@ -510,6 +513,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
           )}
         </div>
       )}
+      <AlertModal
+        isOpen={alertMessage !== null}
+        message={alertMessage || ''}
+        onClose={() => setAlertMessage(null)}
+      />
     </div>
   );
 };

@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Trash2, Plus, Minus, CheckCircle, Printer, AlertTriangle, UserCheck, Users, ShoppingBag } from 'lucide-react';
 import { getProducts, getCustomers, getEmployees, createSale } from '../../services/api';
 import { Product, Customer, Employee, Sale, User } from '../../types';
+import { AlertModal } from '../../components/common/AlertModal';
 
 interface PosSalesViewProps {
   currentUser?: User | null;
 }
 
 export const PosSalesView: React.FC<PosSalesViewProps> = ({ currentUser }) => {
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -56,14 +58,14 @@ export const PosSalesView: React.FC<PosSalesViewProps> = ({ currentUser }) => {
     if (existingIndex > -1) {
       const newCart = [...cart];
       if (newCart[existingIndex].quantity + 1 > product.current_stock) {
-        alert(`❌ Omborda [${product.name}] faqat ${product.current_stock} dona bor!`);
+        setAlertMessage(`Omborda [${product.name}] faqat ${product.current_stock} dona bor!`);
         return;
       }
       newCart[existingIndex].quantity += 1;
       setCart(newCart);
     } else {
       if (product.current_stock < 1) {
-        alert(`❌ Omborda [${product.name}] mahsuloti tugagan!`);
+        setAlertMessage(`Omborda [${product.name}] mahsuloti tugagan!`);
         return;
       }
       setCart([...cart, { product, quantity: 1, unit_price: product.selling_price }]);
@@ -73,7 +75,7 @@ export const PosSalesView: React.FC<PosSalesViewProps> = ({ currentUser }) => {
   const updateQuantity = (index: number, qty: number) => {
     const item = cart[index];
     if (qty > item.product.current_stock) {
-      alert(`❌ Omborda [${item.product.name}] faqat ${item.product.current_stock} dona bor!`);
+      setAlertMessage(`Omborda [${item.product.name}] faqat ${item.product.current_stock} dona bor!`);
       return;
     }
     if (qty <= 0) {
@@ -431,6 +433,12 @@ export const PosSalesView: React.FC<PosSalesViewProps> = ({ currentUser }) => {
           </div>
         </div>
       )}
+
+      <AlertModal
+        isOpen={alertMessage !== null}
+        message={alertMessage || ''}
+        onClose={() => setAlertMessage(null)}
+      />
     </div>
   );
 };
