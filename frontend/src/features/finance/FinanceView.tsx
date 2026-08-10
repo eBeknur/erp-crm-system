@@ -176,7 +176,7 @@ export const FinanceView: React.FC = () => {
         description: tx.description || tx.category || 'Tranzaksiya',
         category: tx.category || 'Moliya',
         amount: tx.amount,
-        account: tx.account_type === 'CASH' ? 'Naqd Kassa' : tx.account_type === 'BANK' ? 'Bank Plastik' : 'Click/Payme'
+        account: 'Asosiy Kassa'
       });
     });
 
@@ -192,7 +192,7 @@ export const FinanceView: React.FC = () => {
           description: `Operatsion xarajat: ${e.category_name} (${e.notes || ''})`,
           category: e.category_name,
           amount: e.amount,
-          account: e.account_type === 'CASH' ? 'Naqd Kassa' : e.account_type === 'BANK' ? 'Bank Plastik' : 'Click/Payme'
+          account: 'Asosiy Kassa'
         });
       }
     });
@@ -264,32 +264,36 @@ export const FinanceView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2 Account Balance Cards (Naqd Kassa & Bank/Plastik/Click) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      {/* 1 Single Combined Asosiy Kassa Balance Card */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {accounts.map((acc) => {
-          const Icon = getAccountIcon(acc.account_type);
           return (
-            <div key={acc.id} className="bg-white border border-slate-100 p-5 sm:p-6 rounded-3xl space-y-3 shadow-sm hover:shadow-md transition">
+            <div key={acc.id} className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-slate-800 p-6 sm:p-8 rounded-3xl space-y-4 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400">{acc.name}</span>
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                  <Icon className="w-5 h-5" />
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                    <DollarSign className="w-7 h-7 text-indigo-400" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-400 block uppercase tracking-wider">Asosiy Kassa Balansi</span>
+                    <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">🟢 Yagona Balans (Barcha Kirim & Xarajatlar)</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900">{formatMoney(acc.balance)}</h3>
                 <button
                   onClick={() => {
                     setIncomeAccountType(acc.account_type);
                     setShowAddIncome(true);
                   }}
-                  className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-[11px] rounded-full border border-emerald-200 transition flex items-center gap-1"
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-full shadow-lg shadow-emerald-500/30 transition flex items-center gap-1.5"
                 >
-                  <Plus className="w-3 h-3" />
-                  <span>Pul Qo'shish</span>
+                  <Plus className="w-4 h-4" />
+                  <span>+ Pul Qo'shish</span>
                 </button>
               </div>
-              <p className="text-[10px] text-slate-400">Oxirgi yangilanish: {new Date(acc.updated_at).toLocaleTimeString('uz-UZ')}</p>
+              <div className="flex items-baseline justify-between gap-2 pt-2">
+                <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-white">{formatMoney(acc.balance)}</h3>
+              </div>
+              <p className="text-[11px] text-slate-400 font-mono">Oxirgi yangilanish: {new Date(acc.updated_at).toLocaleTimeString('uz-UZ')}</p>
             </div>
           );
         })}
@@ -460,7 +464,7 @@ export const FinanceView: React.FC = () => {
                     <td className={`py-3 px-4 text-right font-extrabold ${tx.transaction_type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {tx.transaction_type === 'INCOME' ? '+' : '-'}{formatMoney(tx.amount)}
                     </td>
-                    <td className="py-3 px-4 font-mono text-[10px] text-slate-400">{tx.account_type}</td>
+                    <td className="py-3 px-4 font-mono text-[10px] text-slate-400">Asosiy Kassa</td>
                   </tr>
                 ))}
               </tbody>
@@ -486,17 +490,6 @@ export const FinanceView: React.FC = () => {
             )}
 
             <div className="space-y-3 text-xs">
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">Qaysi Hisobga Pul Qo'shilsin? *</label>
-                <select
-                  value={incomeAccountType}
-                  onChange={(e) => setIncomeAccountType(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
-                >
-                  <option value="CASH">💵 Naqd Kassa</option>
-                  <option value="BANK">💳 Bank / Plastik / Click</option>
-                </select>
-              </div>
               <div>
                 <label className="text-slate-500 font-bold block mb-1">Kirim Summasi (so'm) *</label>
                 <input
@@ -569,17 +562,6 @@ export const FinanceView: React.FC = () => {
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold text-base"
                   required
                 />
-              </div>
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">Qaysi Hisobdan? *</label>
-                <select
-                  value={accountType}
-                  onChange={(e) => setAccountType(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 text-slate-800 font-bold"
-                >
-                  <option value="CASH">💵 Naqd Kassa</option>
-                  <option value="BANK">💳 Bank / Plastik / Click</option>
-                </select>
               </div>
             </div>
             <div className="flex gap-2 pt-2 border-t border-slate-100">

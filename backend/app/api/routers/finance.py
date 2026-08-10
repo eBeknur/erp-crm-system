@@ -63,46 +63,31 @@ def get_accounts(
 ):
     target_store_id = verify_store_isolation(current_user, store_id)
 
-    # Merge legacy CLICK account into BANK account
-    click_acc = db.query(Account).filter(Account.account_type == "CLICK").first()
-    bank_acc = db.query(Account).filter(Account.account_type == "BANK").first()
-    if click_acc:
-        if bank_acc:
-            bank_acc.balance += click_acc.balance
-            bank_acc.name = "Bank / Plastik / Click"
-            db.delete(click_acc)
-        else:
-            click_acc.account_type = "BANK"
-            click_acc.name = "Bank / Plastik / Click"
-        db.commit()
-
-    cash_acc = db.query(Account).filter(Account.account_type == "CASH").first()
-    if cash_acc and cash_acc.name != "Naqd Kassa":
-        cash_acc.name = "Naqd Kassa"
-        db.commit()
-
-    if bank_acc and bank_acc.name != "Bank / Plastik / Click":
-        bank_acc.name = "Bank / Plastik / Click"
-        db.commit()
-
     query = db.query(Account)
     if target_store_id is not None:
         query = query.filter(Account.store_id == target_store_id)
     accounts = query.all()
 
-    if not accounts:
-        defaults = [
-            ("Naqd Kassa", "CASH"),
-            ("Bank / Plastik / Click", "BANK")
-        ]
-        for name, acc_type in defaults:
-            acc = Account(store_id=target_store_id or current_user.store_id, name=name, account_type=acc_type, balance=0.0)
-            db.add(acc)
+    if len(accounts) > 1:
+        total_bal = sum(a.balance for a in accounts)
+        main_acc = accounts[0]
+        main_acc.name = "Asosiy Kassa Balansi"
+        main_acc.account_type = "CASH"
+        main_acc.balance = total_bal
+        for extra in accounts[1:]:
+            db.delete(extra)
         db.commit()
-        query = db.query(Account)
-        if target_store_id is not None:
-            query = query.filter(Account.store_id == target_store_id)
-        accounts = query.all()
+        accounts = [main_acc]
+    elif len(accounts) == 1:
+        if accounts[0].name != "Asosiy Kassa Balansi":
+            accounts[0].name = "Asosiy Kassa Balansi"
+            accounts[0].account_type = "CASH"
+            db.commit()
+    else:
+        acc = Account(store_id=target_store_id or current_user.store_id, name="Asosiy Kassa Balansi", account_type="CASH", balance=30000000.0)
+        db.add(acc)
+        db.commit()
+        accounts = [acc]
 
     return accounts
 

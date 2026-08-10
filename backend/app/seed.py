@@ -216,13 +216,8 @@ def seed_db():
             db.commit()
 
         # 8. Accounts
-        accounts_def = [
-            ("Naqd Kassa", "CASH"),
-            ("Bank / Plastik / Click", "BANK")
-        ]
-        for name, acc_type in accounts_def:
-            if not db.query(Account).filter(Account.name == name, Account.store_id == store1.id).first():
-                db.add(Account(store_id=store1.id, name=name, account_type=acc_type, balance=15000000.0))
+        if not db.query(Account).filter(Account.store_id == store1.id).first():
+            db.add(Account(store_id=store1.id, name="Asosiy Kassa Balansi", account_type="CASH", balance=30000000.0))
         db.commit()
 
         # Initial Audit Log

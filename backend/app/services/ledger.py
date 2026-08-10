@@ -110,19 +110,13 @@ class FinancialLedgerEngine:
         if amount <= 0:
             return
 
-        # Map standard account names
-        account_name_map = {
-            "CASH": "Naqd",
-            "BANK": "Bank",
-            "CLICK": "Click/Payme"
-        }
-        name = account_name_map.get(account_type.upper(), "Naqd")
-        
-        account = db.query(Account).filter(Account.name == name).first()
+        account = db.query(Account).first()
         if not account:
-            account = Account(name=name, account_type=account_type.upper(), balance=0.0)
+            account = Account(name="Asosiy Kassa", account_type="CASH", balance=0.0)
             db.add(account)
             db.flush()
+        elif account.name != "Asosiy Kassa":
+            account.name = "Asosiy Kassa"
 
         if transaction_type.upper() == "INCOME":
             account.balance += amount
@@ -130,7 +124,7 @@ class FinancialLedgerEngine:
             account.balance -= amount
 
         transaction = FinancialTransaction(
-            account_type=account_type.upper(),
+            account_type="CASH",
             transaction_type=transaction_type.upper(),
             category=category,
             amount=amount,
