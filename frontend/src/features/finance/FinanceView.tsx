@@ -155,19 +155,65 @@ export const FinanceView: React.FC = () => {
       return;
     }
 
+    const allRecords: {
+      id: string | number;
+      date: string;
+      rawDate: number;
+      type: string;
+      description: string;
+      category: string;
+      amount: number;
+      account: string;
+    }[] = [];
+
+    // Add financial transactions (incomes & ledger expenses)
+    transactions.forEach(tx => {
+      allRecords.push({
+        id: `TX-${tx.id}`,
+        date: new Date(tx.created_at).toLocaleString('uz-UZ'),
+        rawDate: new Date(tx.created_at).getTime(),
+        type: tx.transaction_type === 'INCOME' ? 'KIRIM (+)' : 'CHIQIM (-)',
+        description: tx.description || tx.category || 'Tranzaksiya',
+        category: tx.category || 'Moliya',
+        amount: tx.amount,
+        account: tx.account_type === 'CASH' ? 'Naqd Kassa' : tx.account_type === 'BANK' ? 'Bank Plastik' : 'Click/Payme'
+      });
+    });
+
+    // Add Expenses if not already linked in transactions
+    const txRefIds = new Set(transactions.map(t => t.reference_id).filter(Boolean));
+    expenses.forEach(e => {
+      if (!txRefIds.has(e.id)) {
+        allRecords.push({
+          id: `EXP-${e.id}`,
+          date: e.date || new Date().toISOString().split('T')[0],
+          rawDate: new Date(e.date || Date.now()).getTime(),
+          type: 'CHIQIM (-)',
+          description: `Operatsion xarajat: ${e.category_name} (${e.notes || ''})`,
+          category: e.category_name,
+          amount: e.amount,
+          account: e.account_type === 'CASH' ? 'Naqd Kassa' : e.account_type === 'BANK' ? 'Bank Plastik' : 'Click/Payme'
+        });
+      }
+    });
+
+    // Sort by date descending
+    allRecords.sort((a, b) => b.rawDate - a.rawDate);
+
     const headers = ["ID", "Sana va Vaqt", "Tranzaksiya Turi", "Operatsiya / Izoh", "Kategoriya", "Summa (so'm)", "Hisob"];
 
-    const rows = transactions.map(tx => [
-      tx.id,
-      new Date(tx.created_at).toLocaleString('uz-UZ'),
-      tx.transaction_type === 'INCOME' ? 'KIRIM (+)' : 'CHIQIM (-)',
-      `"${(tx.description || tx.category || '').replace(/"/g, '""')}"`,
-      `"${(tx.category || '').replace(/"/g, '""')}"`,
-      tx.amount,
-      tx.account_type === 'CASH' ? 'Naqd Kassa' : tx.account_type === 'BANK' ? 'Bank Plastik' : 'Click/Payme'
+    const rows = allRecords.map(r => [
+      r.id,
+      r.date,
+      r.type,
+      `"${(r.description || '').replace(/"/g, '""')}"`,
+      `"${(r.category || '').replace(/"/g, '""')}"`,
+      r.amount,
+      r.account
     ]);
 
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    // Use sep=; instruction for Excel column separation across all Windows regional settings
+    const csvContent = "\uFEFFsep=;\n" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

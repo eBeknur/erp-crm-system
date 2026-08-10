@@ -245,11 +245,13 @@ export interface Account {
 export interface FinancialTransaction {
   id: number;
   store_id?: number;
-  account_type: string;
-  transaction_type: 'INCOME' | 'EXPENSE';
+  account_type: 'CASH' | 'BANK' | 'CLICK' | string;
+  transaction_type: 'INCOME' | 'EXPENSE' | string;
   category: string;
   amount: number;
   description?: string;
+  reference_type?: string;
+  reference_id?: number;
   created_at: string;
 }
 
