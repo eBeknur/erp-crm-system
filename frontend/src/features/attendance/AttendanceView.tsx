@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, CheckCircle2, AlertTriangle, ShieldCheck, Clock, FileSpreadsheet, RefreshCw, Calendar } from 'lucide-react';
+import { Camera, CheckCircle2, AlertTriangle, ShieldCheck, Clock, FileSpreadsheet, RefreshCw, Calendar, Trash2 } from 'lucide-react';
 import { getTodayAttendance, getAttendanceList, checkInAttendance, checkOutAttendance, clearAttendanceHistory } from '../../services/api';
 import { AttendanceItem, User } from '../../types';
 import { AlertModal } from '../../components/common/AlertModal';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface AttendanceViewProps {
   currentUser?: User | null;
@@ -165,9 +166,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
   };
 
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // 1. Export Daily Attendance & Clear History
-  const exportDailyExcel = async () => {
+  // 1. Export Daily Attendance (History IS NOT CLEARED per user request)
+  const exportDailyExcel = () => {
     if (filteredListByDay.length === 0) {
       setAlertMessage("Yuklab olish uchun kunlik davomat ma'lumotlari mavjud emas!");
       return;
@@ -207,17 +209,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
     link.click();
     document.body.removeChild(link);
 
-    // Clear history after export per user request
-    try {
-      await clearAttendanceHistory();
-      setAlertMessage("✅ Kunlik davomat yuklab olindi va tarix muvaffaqiyatli tozalandi!");
-      fetchAttendanceData();
-    } catch (e) {
-      console.error(e);
-    }
+    setAlertMessage("✅ Kunlik davomat muvaffaqiyatli yuklab olindi!");
   };
 
-  // 2. Export 30-Day Monthly Worked Hours Summary & Clear History
+  // 2. Export 30-Day Monthly Worked Hours Summary
   const exportMonthlyExcel = async () => {
     try {
       // Fetch past 30 days of attendance
@@ -287,12 +282,21 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
       link.click();
       document.body.removeChild(link);
 
-      // Clear history after export per user request
-      await clearAttendanceHistory();
-      setAlertMessage("✅ 1 oylik ish soatlari hisoboti yuklab olindi va tarix tozalandi!");
-      fetchAttendanceData();
+      setAlertMessage("✅ 1 oylik ish soatlari hisoboti muvaffaqiyatli yuklab olindi!");
     } catch (e) {
       setAlertMessage("Oylik hisobotni yuklab olishda xatolik yuz berdi");
+    }
+  };
+
+  // 3. Clear History Handler
+  const handleConfirmClearHistory = async () => {
+    setShowClearConfirm(false);
+    try {
+      await clearAttendanceHistory();
+      setAlertMessage("🗑️ Davomat tarixi muvaffaqiyatli tozalandi!");
+      fetchAttendanceData();
+    } catch (e) {
+      setAlertMessage("Tarixni tozalashda xatolik yuz berdi");
     }
   };
 
@@ -379,6 +383,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 <span>📊 Oylik Ish Soatlari Hisoboti (1 Oy)</span>
+              </button>
+
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                className="px-4 py-2.5 bg-rose-600/80 hover:bg-rose-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-rose-600/20 transition flex items-center gap-2 cursor-pointer active:scale-95 border border-rose-400/30"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>🗑️ Tarixni Tozalash</span>
               </button>
             </>
           )}
@@ -617,6 +629,17 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
         isOpen={alertMessage !== null}
         message={alertMessage || ''}
         onClose={() => setAlertMessage(null)}
+      />
+
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        title="Davomat Tarixini Tozalash"
+        message="Rostdan ham barcha davomat tarixini o'chirib toza holatga keltirmoqchimisiz?"
+        confirmText="Ha, tozalash"
+        cancelText="Yo'q, bekor qilish"
+        type="danger"
+        onConfirm={handleConfirmClearHistory}
+        onCancel={() => setShowClearConfirm(false)}
       />
     </div>
   );
