@@ -34,7 +34,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     // Store Admin & Operations Tabs
     { id: 'tasks', label: 'Vazifalar Boshqaruvi', icon: CheckSquare, badge: 'Tasks', allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER', 'ISHCHI', 'SELLER'] },
     { id: 'warehouse', label: 'Ombor & Tovarlar', icon: Package, allowedRoles: ['ADMIN', 'SUPER_ADMIN', 'ISHCHI', 'SELLER'] },
-    { id: 'purchases', label: 'Tovar Kirimi', icon: ArrowDownToLine, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
     { id: 'suppliers', label: 'Postavshiklar', icon: Building2, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
     { id: 'employees', label: "Ishchilar Ro'yxati", icon: Users, allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'] },
     { id: 'attendance', label: "Nazorat", icon: Clock, badge: 'Shift 09:00', allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER', 'ISHCHI', 'SELLER'] },
