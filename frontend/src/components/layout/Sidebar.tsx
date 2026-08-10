@@ -36,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'warehouse', label: 'Ombor & Tovarlar', icon: Package, allowedRoles: ['ADMIN', 'SUPER_ADMIN', 'ISHCHI', 'SELLER'] },
     { id: 'purchases', label: 'Tovar Kirimi', icon: ArrowDownToLine, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
     { id: 'suppliers', label: 'Postavshiklar', icon: Building2, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'employees', label: "Ishchilar Ro'yxati", icon: Users, allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER', 'ISHCHI', 'SELLER'] },
+    { id: 'employees', label: "Ishchilar Ro'yxati", icon: Users, allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'] },
     { id: 'attendance', label: "Nazorat", icon: Clock, badge: 'Shift 09:00', allowedRoles: ['DEVELOPER', 'ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER', 'ISHCHI', 'SELLER'] },
     { id: 'credits', label: "Kreditlar Bo'limi", icon: Landmark, badge: 'Kredit', allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
     { id: 'finance', label: 'Moliya & Xarajatlar', icon: DollarSign, allowedRoles: ['ADMIN', 'SUPER_ADMIN'] },
