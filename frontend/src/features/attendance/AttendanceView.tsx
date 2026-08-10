@@ -280,10 +280,12 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
             </button>
           )}
 
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-right">
-            <span className="text-[10px] text-indigo-200 uppercase font-black tracking-wider block">Jami Kelganlar</span>
-            <span className="text-2xl font-black text-emerald-400 font-mono">{totalPresentCount} ta</span>
-          </div>
+          {isAdmin && (
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-right">
+              <span className="text-[10px] text-indigo-200 uppercase font-black tracking-wider block">Jami Kelganlar</span>
+              <span className="text-2xl font-black text-emerald-400 font-mono">{totalPresentCount} ta</span>
+            </div>
+          )}
         </div>
       </div>
 
