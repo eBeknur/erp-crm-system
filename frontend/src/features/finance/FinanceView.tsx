@@ -266,30 +266,7 @@ export const FinanceView: React.FC = () => {
         </div>
       </div>
 
-      {/* 1 Single Combined Asosiy Kassa Balance Card */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6">
-        {accounts.map((acc) => {
-          return (
-            <div key={acc.id} className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-slate-800 p-6 sm:p-8 rounded-3xl space-y-4 shadow-xl relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
-                    <DollarSign className="w-7 h-7 text-indigo-400" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-400 block uppercase tracking-wider">Asosiy Kassa Balansi</span>
-                    <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">🟢 Yagona Balans (Barcha Kirim & Xarajatlar)</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-baseline justify-between gap-2 pt-2">
-                <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-white">{formatMoney(acc.balance)}</h3>
-              </div>
-              <p className="text-[11px] text-slate-400 font-mono">Oxirgi yangilanish: {new Date(acc.updated_at).toLocaleTimeString('uz-UZ')}</p>
-            </div>
-          );
-        })}
-      </div>
+
 
       {/* Financial Expense Analytics & Breakdown Report */}
       {/* SINGLE UNIFIED FULL-WIDTH TABLE CARD: BARCHA HARAKATLAR JURNALI */}

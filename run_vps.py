@@ -76,7 +76,7 @@ def run():
         "python3 -m venv /opt/atigi_crm/backend/venv",
         "/opt/atigi_crm/backend/venv/bin/python3 -m pip install -r /opt/atigi_crm/backend/requirements.txt",
         "chmod -R 755 /opt/atigi_crm",
-        "cd /opt/atigi_crm/backend && /opt/atigi_crm/backend/venv/bin/python3 reset_clean_data.py",
+        "cd /opt/atigi_crm/backend && /opt/atigi_crm/backend/venv/bin/python3 -m app.seed",
         "chmod -R 755 /opt/atigi_crm",
     ]
 
