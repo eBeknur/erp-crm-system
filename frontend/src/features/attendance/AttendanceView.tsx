@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, CheckCircle2, AlertTriangle, ShieldCheck, Clock, FileSpreadsheet, RefreshCw, Calendar } from 'lucide-react';
-import { getTodayAttendance, getAttendanceList, checkInAttendance, checkOutAttendance } from '../../services/api';
+import { getTodayAttendance, getAttendanceList, checkInAttendance, checkOutAttendance, clearAttendanceHistory } from '../../services/api';
 import { AttendanceItem, User } from '../../types';
 import { AlertModal } from '../../components/common/AlertModal';
 
@@ -166,15 +166,17 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
 
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
-  // Export Attendance & Worked Hours Report to Excel (.csv with UTF-8 BOM)
-  const exportToExcel = () => {
-    if (attendanceList.length === 0) {
-      setAlertMessage("Yuklab olish uchun ma'lumotlar mavjud emas!");
+  // 1. Export Daily Attendance & Clear History
+  const exportDailyExcel = async () => {
+    if (filteredListByDay.length === 0) {
+      setAlertMessage("Yuklab olish uchun kunlik davomat ma'lumotlari mavjud emas!");
       return;
     }
 
+    const selectedDayLabel = last7Days[selectedDayOffset]?.label || 'Bugun';
     const headers = ["F.I.SH (Ishchi)", "Sana", "Kelgan Vaqti", "Ketgan Vaqti", "Ishlagan Vaqti", "Kechikish (Daqiqa)", "Holati"];
-    const rows = attendanceList.map(item => {
+    
+    const rows = filteredListByDay.map(item => {
       const name = item.full_name || item.employee?.full_name || `Ishchi #${item.employee_id}`;
       const dateStr = new Date(item.check_in_time).toLocaleDateString('uz-UZ');
       const inTime = new Date(item.check_in_time).toLocaleTimeString('uz-UZ');
@@ -191,19 +193,107 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
         `"${workedStr}"`,
         `"${lateMins} min"`,
         `"${statusText}"`
-      ].join(",");
+      ].join(";");
     });
 
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const csvContent = "\uFEFFsep=;\n" + [headers.join(";"), ...rows].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    const fileName = `Ishchilar_Ish_Soatlari_Hisoboti_${new Date().toISOString().slice(0, 10)}.csv`;
+    const fileName = `Kunlik_Davomat_${selectedDayLabel}_${new Date().toISOString().slice(0, 10)}.csv`;
     link.setAttribute("download", fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Clear history after export per user request
+    try {
+      await clearAttendanceHistory();
+      setAlertMessage("✅ Kunlik davomat yuklab olindi va tarix muvaffaqiyatli tozalandi!");
+      fetchAttendanceData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // 2. Export 30-Day Monthly Worked Hours Summary & Clear History
+  const exportMonthlyExcel = async () => {
+    try {
+      // Fetch past 30 days of attendance
+      const records: AttendanceItem[] = await getAttendanceList(undefined, 30);
+      if (records.length === 0) {
+        setAlertMessage("Yuklab olish uchun 1 oylik davomat ma'lumotlari mavjud emas!");
+        return;
+      }
+
+      // Aggregate per employee
+      const employeeStats: {
+        [empId: string]: {
+          name: string;
+          totalHours: number;
+          daysPresent: number;
+          totalLateMins: number;
+        }
+      } = {};
+
+      records.forEach(r => {
+        const empId = r.employee_id || r.user_id || 0;
+        const name = r.full_name || r.employee?.full_name || `Ishchi #${empId}`;
+        const hrs = r.worked_hours || 0;
+        const late = r.late_minutes || 0;
+
+        if (!employeeStats[empId]) {
+          employeeStats[empId] = {
+            name,
+            totalHours: 0,
+            daysPresent: 0,
+            totalLateMins: 0
+          };
+        }
+
+        employeeStats[empId].totalHours += hrs;
+        employeeStats[empId].daysPresent += 1;
+        employeeStats[empId].totalLateMins += late;
+      });
+
+      const headers = [
+        "F.I.SH (Ishchi)",
+        "Jami Ishlagan Soatlari (1 Oyda)",
+        "Kelgan Kunlar Soni",
+        "Jami Kechikish Daqiqalari",
+        "O'rtacha Kunlik Ish Soati"
+      ];
+
+      const rows = Object.values(employeeStats).map(stat => {
+        const avgHrs = stat.daysPresent > 0 ? (stat.totalHours / stat.daysPresent).toFixed(1) : '0';
+        return [
+          `"${stat.name}"`,
+          `"${stat.totalHours.toFixed(1)} soat"`,
+          `"${stat.daysPresent} kun"`,
+          `"${stat.totalLateMins} daqiqa"`,
+          `"${avgHrs} soat/kun"`
+        ].join(";");
+      });
+
+      const csvContent = "\uFEFFsep=;\n" + [headers.join(";"), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      const fileName = `Oylik_Ish_Soatlari_Hisoboti_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clear history after export per user request
+      await clearAttendanceHistory();
+      setAlertMessage("✅ 1 oylik ish soatlari hisoboti yuklab olindi va tarix tozalandi!");
+      fetchAttendanceData();
+    } catch (e) {
+      setAlertMessage("Oylik hisobotni yuklab olishda xatolik yuz berdi");
+    }
   };
 
   // Helper to generate 7 days array
@@ -272,15 +362,25 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ currentUser }) =
           </p>
         </div>
 
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           {isAdmin && (
-            <button
-              onClick={exportToExcel}
-              className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-emerald-600/30 transition flex items-center gap-2 cursor-pointer active:scale-95 border border-emerald-400/40"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>📊 Excel Hisobotini Yuklash (.xlsx)</span>
-            </button>
+            <>
+              <button
+                onClick={exportDailyExcel}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-emerald-600/30 transition flex items-center gap-2 cursor-pointer active:scale-95 border border-emerald-400/40"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>📅 Kunlik Davomatni Yuklab Olish</span>
+              </button>
+
+              <button
+                onClick={exportMonthlyExcel}
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2 cursor-pointer active:scale-95 border border-indigo-400/40"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>📊 Oylik Ish Soatlari Hisoboti (1 Oy)</span>
+              </button>
+            </>
           )}
 
           {isAdmin && (

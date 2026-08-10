@@ -305,3 +305,15 @@ def list_attendance(
             setattr(r, 'worked_time_str', "0 soat")
 
     return records
+
+@router.post("/clear-history")
+def clear_attendance_history(
+    store_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Clear attendance history records for the store after Excel export"""
+    target_store_id = verify_store_isolation(current_user, store_id) or current_user.store_id or 1
+    db.query(Attendance).filter(Attendance.store_id == target_store_id).delete()
+    db.commit()
+    return {"message": "Davomat tarixi muvaffaqiyatli tozalandi!"}

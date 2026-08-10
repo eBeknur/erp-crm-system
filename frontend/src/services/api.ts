@@ -326,3 +326,8 @@ export const getAttendanceList = async (employee_id?: number, days: number = 7) 
   const res = await api.get('/attendance/list', { params: { employee_id, days } });
   return res.data;
 };
+
+export const clearAttendanceHistory = async () => {
+  const res = await api.post('/attendance/clear-history');
+  return res.data;
+};
