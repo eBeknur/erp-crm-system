@@ -149,6 +149,36 @@ export const FinanceView: React.FC = () => {
     window.print();
   };
 
+  const handleExportExcel = () => {
+    if (transactions.length === 0 && expenses.length === 0) {
+      alert("Yuklab olish uchun kirim-chiqim tranzaksiyalari mavjud emas!");
+      return;
+    }
+
+    const headers = ["ID", "Sana va Vaqt", "Tranzaksiya Turi", "Operatsiya / Izoh", "Kategoriya", "Summa (so'm)", "Hisob"];
+
+    const rows = transactions.map(tx => [
+      tx.id,
+      new Date(tx.created_at).toLocaleString('uz-UZ'),
+      tx.transaction_type === 'INCOME' ? 'KIRIM (+)' : 'CHIQIM (-)',
+      `"${(tx.description || tx.category || '').replace(/"/g, '""')}"`,
+      `"${(tx.category || '').replace(/"/g, '""')}"`,
+      tx.amount,
+      tx.account_type === 'CASH' ? 'Naqd Kassa' : tx.account_type === 'BANK' ? 'Bank Plastik' : 'Click/Payme'
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    const filename = `kirim_chiqim_hisoboti_${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto font-sans">
       {/* Header Banner */}
@@ -230,13 +260,22 @@ export const FinanceView: React.FC = () => {
             <p className="text-xs text-slate-400">Kategoriyalar va Kichik Chiqimlar taqsimoti</p>
           </div>
 
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-full transition"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Hisobotni Chop Etish</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-full transition shadow-sm"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Excel Yuklab Olish (.csv)</span>
+            </button>
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-full transition"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Chop Etish</span>
+            </button>
+          </div>
         </div>
 
         {/* Expense Category Cards */}
@@ -336,14 +375,24 @@ export const FinanceView: React.FC = () => {
 
         {/* Cash Flow Ledger */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <ArrowUpRight className="w-4 h-4 text-emerald-600" />
-            <span>Cash Flow (Pul Harakatlari Jurnali)</span>
-          </h3>
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <ArrowUpRight className="w-4 h-4 text-emerald-600" />
+              <span>Cash Flow (Pul Harakatlari Jurnali)</span>
+            </h3>
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs rounded-full border border-emerald-200 transition"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Excel Yuklash</span>
+            </button>
+          </div>
           <div className="overflow-x-auto max-h-96">
             <table className="w-full text-left border-collapse text-xs">
               <thead className="bg-slate-50 text-slate-400 font-bold border-b border-slate-100">
                 <tr>
+                  <th className="py-3 px-4">Sana & Vaqt</th>
                   <th className="py-3 px-4">Operatsiya</th>
                   <th className="py-3 px-4">Kategoriya</th>
                   <th className="py-3 px-4 text-right">Summa</th>
@@ -353,6 +402,9 @@ export const FinanceView: React.FC = () => {
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {transactions.map((tx) => (
                   <tr key={tx.id}>
+                    <td className="py-3 px-4 text-slate-400 font-medium whitespace-nowrap">
+                      {new Date(tx.created_at).toLocaleString('uz-UZ')}
+                    </td>
                     <td className="py-3 px-4 font-medium">
                       <span className={`inline-flex items-center gap-1 font-bold ${tx.transaction_type === 'INCOME' ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {tx.transaction_type === 'INCOME' ? '+' : '-'} {tx.description || tx.category}
